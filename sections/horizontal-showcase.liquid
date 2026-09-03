@@ -1,0 +1,490 @@
+<script
+  src="{{ 'horizontal-showcase.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
+  endif
+%}
+
+<div
+  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+></div>
+<horizontal-showcase-section
+  class="section section--{{ section.settings.section_width }} spacing-style horizontal-showcase{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  style="
+    {%- render 'spacing-style', settings: section.settings %};
+    min-height: var(--scroll-height, auto);
+    --showcase-card-width: {{ section.settings.card_width }}px;
+    --showcase-card-gap: {{ section.settings.card_gap }}px;
+    --showcase-card-radius: {{ section.settings.card_border_radius }}px;
+  "
+  data-speed-factor="1"
+>
+  <div class="horizontal-showcase__sticky">
+    {% if section.settings.heading != blank or section.settings.subheading != blank %}
+      <div class="horizontal-showcase__header" style="text-align: {{ section.settings.heading_alignment }}">
+        {% if section.settings.heading != blank %}
+          <h2 class="horizontal-showcase__heading">{{ section.settings.heading }}</h2>
+        {% endif %}
+        {% if section.settings.subheading != blank %}
+          <p class="horizontal-showcase__subheading">{{ section.settings.subheading }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="horizontal-showcase__viewport">
+      <div class="horizontal-showcase__track" ref="track">
+        {% for block in section.blocks %}
+          {% liquid
+            assign card_collection = block.settings.collection
+            assign card_image = block.settings.image
+            assign card_heading = block.settings.heading
+            assign card_description = block.settings.description
+            assign card_link_label = block.settings.link_label
+            assign has_link = false
+            if card_collection != blank
+              assign has_link = true
+            endif
+          %}
+          <div
+            class="horizontal-showcase__card"
+            {{ block.shopify_attributes }}
+            {% if section.settings.card_background != blank %}
+              style="--card-bg: {{ section.settings.card_background }}"
+            {% endif %}
+          >
+            {% if has_link %}<a href="{{ card_collection.url }}" class="horizontal-showcase__card-link">{% endif %}
+              <div class="horizontal-showcase__card-media">
+                {% if card_image %}
+                  {{
+                    card_image
+                    | image_url: width: card_image.width
+                    | image_tag:
+                      loading: 'lazy',
+                      sizes: '(min-width: 60em) 400px, 80vw',
+                      widths: '300,400,600,800',
+                      alt: card_image.alt
+                  }}
+                {% elsif card_collection != blank and card_collection.image %}
+                  {{
+                    card_collection.image
+                    | image_url: width: card_collection.image.width
+                    | image_tag:
+                      loading: 'lazy',
+                      sizes: '(min-width: 60em) 400px, 80vw',
+                      widths: '300,400,600,800',
+                      alt: card_collection.image.alt
+                  }}
+                {% else %}
+                  <div class="horizontal-showcase__card-placeholder">
+                    {{ 'collection-1' | placeholder_svg_tag: 'horizontal-showcase__placeholder-svg' }}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="horizontal-showcase__card-gradient"></div>
+              <div class="horizontal-showcase__card-content">
+                {% if card_heading != blank %}
+                  <h3 class="horizontal-showcase__card-heading">{{ card_heading }}</h3>
+                {% endif %}
+                {% if card_description != blank %}
+                  <p class="horizontal-showcase__card-description">{{ card_description }}</p>
+                {% endif %}
+                {% if card_link_label != blank and has_link %}
+                  <span class="horizontal-showcase__card-cta">{{ card_link_label }}</span>
+                {% endif %}
+              </div>
+            {% if has_link %}</a>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</horizontal-showcase-section>
+
+{% stylesheet %}
+  horizontal-showcase-section {
+    display: block;
+    position: relative;
+  }
+
+  .horizontal-showcase__sticky {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .horizontal-showcase__header {
+    padding-inline: var(--page-margin, 1.5rem);
+  }
+
+  .horizontal-showcase__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    line-height: 1.2;
+  }
+
+  .horizontal-showcase__subheading {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    opacity: 0.7;
+  }
+
+  .horizontal-showcase__viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-inline: var(--page-margin, 1.5rem);
+  }
+
+  .horizontal-showcase__viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .horizontal-showcase__track {
+    display: flex;
+    gap: var(--showcase-card-gap, 24px);
+  }
+
+  .horizontal-showcase__card {
+    flex-shrink: 0;
+    width: var(--showcase-card-width, 400px);
+    position: relative;
+    border-radius: var(--showcase-card-radius, 16px);
+    overflow: hidden;
+    scroll-snap-align: start;
+    background-color: var(--card-bg, rgb(var(--color-foreground-rgb, 0 0 0) / 0.04));
+  }
+
+  .horizontal-showcase__card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+  }
+
+  .horizontal-showcase__card-link:focus-visible {
+    outline: 2px solid var(--color-foreground);
+    outline-offset: 2px;
+    border-radius: var(--showcase-card-radius, 16px);
+  }
+
+  .horizontal-showcase__card-media {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+  }
+
+  .horizontal-showcase__card-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .horizontal-showcase__card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(var(--color-foreground-rgb, 0 0 0) / 0.04);
+  }
+
+  .horizontal-showcase__placeholder-svg {
+    width: 60%;
+    height: 60%;
+    opacity: 0.3;
+  }
+
+  .horizontal-showcase__card-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 50%);
+    pointer-events: none;
+  }
+
+  .horizontal-showcase__card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .horizontal-showcase__card-heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: #fff;
+  }
+
+  .horizontal-showcase__card-description {
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    opacity: 0.85;
+    color: #fff;
+  }
+
+  .horizontal-showcase__card-cta {
+    font-family: var(--font-body--family);
+    font-size: 0.875rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    color: #fff;
+  }
+
+  /* Desktop: sticky pinned horizontal scroll */
+  @media screen and (min-width: 60em) {
+    .horizontal-showcase__sticky {
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      justify-content: center;
+    }
+
+    .horizontal-showcase__viewport {
+      overflow: hidden;
+      scroll-snap-type: none;
+    }
+
+    .horizontal-showcase__track {
+      will-change: transform;
+    }
+
+    .horizontal-showcase__card {
+      scroll-snap-align: unset;
+    }
+  }
+
+  /* Reduced motion: no sticky, just scroll */
+  @media (prefers-reduced-motion: reduce) {
+    .horizontal-showcase__sticky {
+      position: static;
+      height: auto;
+    }
+
+    .horizontal-showcase__viewport {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+
+    .horizontal-showcase__track {
+      will-change: auto;
+    }
+
+    .horizontal-showcase__card {
+      scroll-snap-align: start;
+    }
+  }
+
+  /* Mobile card sizing */
+  @media screen and (max-width: 60em) {
+    .horizontal-showcase__card {
+      width: 80vw;
+      max-width: 340px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Horizontal showcase",
+  "tag": "section",
+  "class": "section-wrapper",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "blocks": [
+    {
+      "type": "showcase-card",
+      "name": "Card",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Collection name"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "default": "Explore our curated selection"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Link label",
+          "default": "Explore"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Header"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Discover"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "card_width",
+      "label": "Card width",
+      "min": 280,
+      "max": 600,
+      "step": 20,
+      "default": 400,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "Gap",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_border_radius",
+      "label": "Card radius",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "placeholder": "t:settings.default"
+    },
+    {
+      "type": "color",
+      "id": "card_background",
+      "label": "Card background",
+      "placeholder": "t:settings.default"
+    },
+    {
+      "type": "header",
+      "content": "Size"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Width",
+      "options": [
+        { "value": "page-width", "label": "Page" },
+        { "value": "full-width", "label": "Full" }
+      ],
+      "default": "full-width"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 60,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 60,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Horizontal showcase",
+      "category": "Collections",
+      "blocks": [
+        {
+          "type": "showcase-card",
+          "settings": {
+            "heading": "Summer edit"
+          }
+        },
+        {
+          "type": "showcase-card",
+          "settings": {
+            "heading": "Best sellers"
+          }
+        },
+        {
+          "type": "showcase-card",
+          "settings": {
+            "heading": "New in"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

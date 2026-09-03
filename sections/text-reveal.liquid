@@ -1,0 +1,389 @@
+<script
+  src="{{ 'text-reveal.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, text_color: section.settings.text_color, section_id: section.id
+  elsif section.settings.text_color != blank
+    render 'contrast-override', text_color: section.settings.text_color, section_id: section.id
+  endif
+%}
+
+<div
+  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+></div>
+<text-reveal-section
+  class="section section--{{ section.settings.section_width }} spacing-style{% if section.settings.background_color != blank or section.settings.text_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  style="
+    {%- render 'spacing-style', settings: section.settings %};
+    {% if section.settings.section_height == 'medium' %}
+      --section-min-height: var(--section-height-medium);
+    {% elsif section.settings.section_height == 'large' %}
+      --section-min-height: var(--section-height-large);
+    {% elsif section.settings.section_height == 'full-screen' %}
+      --section-min-height: 100svh;
+    {% endif %}
+  "
+>
+  <div
+    class="text-reveal__container"
+    style="
+      --text-reveal-gap: {{ section.settings.gap }}px;
+      --text-reveal-alignment: {{ section.settings.text_alignment }};
+    "
+  >
+    {% for block in section.blocks %}
+      {% liquid
+        assign delay_index = forloop.index0
+        assign size = block.settings.size_override
+        assign font = block.settings.font_override
+        assign emphasis = block.settings.emphasis
+      %}
+      <div
+        class="text-reveal__line text-reveal__line--{{ size }} text-reveal__line--anim-{{ section.settings.animation_style }}{% if font != 'default' %} text-reveal__line--font-{{ font }}{% endif %}{% if emphasis == 'italic' %} text-reveal__line--italic{% elsif emphasis == 'uppercase' %} text-reveal__line--uppercase{% endif %}"
+        style="--delay-index: {{ delay_index }}"
+        ref="lines[]"
+        {{ block.shopify_attributes }}
+      >
+        {% case size %}
+          {% when 'jumbo' %}
+            <h1 class="text-reveal__text">{{ block.settings.text }}</h1>
+          {% when 'large' %}
+            <h2 class="text-reveal__text">{{ block.settings.text }}</h2>
+          {% when 'small' %}
+            <span class="text-reveal__text text-reveal__text--small">{{ block.settings.text }}</span>
+          {% else %}
+            <span class="text-reveal__text">{{ block.settings.text }}</span>
+        {% endcase %}
+      </div>
+    {% endfor %}
+  </div>
+</text-reveal-section>
+
+{% stylesheet %}
+  text-reveal-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .text-reveal__container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--text-reveal-gap, 16px);
+    align-items: var(--text-reveal-alignment, center);
+    width: 100%;
+  }
+
+  .text-reveal__line {
+    overflow: hidden;
+  }
+
+  .text-reveal__text {
+    margin: 0;
+    line-height: 1.1;
+    font-family: var(--font-body--family);
+  }
+
+  .text-reveal__line--font-heading .text-reveal__text {
+    font-family: var(--font-heading--family);
+  }
+
+  .text-reveal__line--font-accent .text-reveal__text {
+    font-family: var(--font-accent--family);
+  }
+
+  .text-reveal__line--font-subheading .text-reveal__text {
+    font-family: var(--font-subheading--family);
+  }
+
+  .text-reveal__line--italic .text-reveal__text {
+    font-style: italic;
+  }
+
+  .text-reveal__line--uppercase .text-reveal__text {
+    text-transform: uppercase;
+  }
+
+  /* Size presets */
+  .text-reveal__line--default .text-reveal__text {
+    font-size: clamp(1.25rem, 2.5vw, 2rem);
+  }
+
+  .text-reveal__line--small .text-reveal__text {
+    font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+  }
+
+  .text-reveal__line--large .text-reveal__text {
+    font-size: clamp(2rem, 4vw, 4rem);
+  }
+
+  .text-reveal__line--jumbo .text-reveal__text {
+    font-size: clamp(3rem, 6vw, 6rem);
+  }
+
+  /* Animation: fade-up */
+  .text-reveal__line--anim-fade-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition:
+      opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(var(--delay-index, 0) * 0.12s);
+  }
+
+  .text-reveal__line--anim-fade-up.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Animation: clip-reveal */
+  .text-reveal__line--anim-clip-reveal {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+    transform: scaleY(0.8);
+    transform-origin: bottom;
+    transition:
+      opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      clip-path 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(var(--delay-index, 0) * 0.12s);
+  }
+
+  .text-reveal__line--anim-clip-reveal.is-revealed {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    transform: scaleY(1);
+  }
+
+  /* Animation: slide-in */
+  .text-reveal__line--anim-slide-in {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition:
+      opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(var(--delay-index, 0) * 0.12s);
+  }
+
+  .text-reveal__line--anim-slide-in.is-revealed {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .text-reveal__line {
+      opacity: 0;
+      transform: none;
+      clip-path: none;
+      transition: opacity 0.4s ease;
+      transition-delay: 0s;
+    }
+
+    .text-reveal__line.is-revealed {
+      opacity: 1;
+    }
+  }
+
+  /* Mobile adjustments */
+  @media screen and (max-width: 40em) {
+    .text-reveal__line {
+      transition-delay: calc(var(--delay-index, 0) * 0.06s);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Text reveal",
+  "tag": "section",
+  "class": "section-wrapper",
+  "blocks": [
+    {
+      "type": "text-line",
+      "name": "Text line",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Your text here"
+        },
+        {
+          "type": "select",
+          "id": "size_override",
+          "label": "Size",
+          "options": [
+            { "value": "small", "label": "Small" },
+            { "value": "default", "label": "Default" },
+            { "value": "large", "label": "Large" },
+            { "value": "jumbo", "label": "Jumbo" }
+          ],
+          "default": "default"
+        },
+        {
+          "type": "select",
+          "id": "font_override",
+          "label": "Font",
+          "options": [
+            { "value": "default", "label": "Default" },
+            { "value": "heading", "label": "Heading" },
+            { "value": "accent", "label": "Accent" },
+            { "value": "subheading", "label": "Subheading" }
+          ],
+          "default": "default"
+        },
+        {
+          "type": "select",
+          "id": "emphasis",
+          "label": "Emphasis",
+          "options": [
+            { "value": "none", "label": "None" },
+            { "value": "italic", "label": "Italic" },
+            { "value": "uppercase", "label": "Uppercase" }
+          ],
+          "default": "none"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "animation_style",
+      "label": "Animation",
+      "options": [
+        { "value": "fade-up", "label": "Fade up" },
+        { "value": "clip-reveal", "label": "Clip reveal" },
+        { "value": "slide-in", "label": "Slide in" }
+      ],
+      "default": "fade-up"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "flex-start", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "flex-end", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Gap",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Size"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Width",
+      "options": [
+        { "value": "page-width", "label": "Page" },
+        { "value": "full-width", "label": "Full" }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "select",
+      "id": "section_height",
+      "label": "Height",
+      "options": [
+        { "value": "", "label": "Auto" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" },
+        { "value": "full-screen", "label": "Full screen" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "placeholder": "t:settings.default"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "placeholder": "t:settings.default"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 80,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Text reveal",
+      "category": "Text",
+      "blocks": [
+        {
+          "type": "text-line",
+          "settings": {
+            "text": "Designed with",
+            "size_override": "large"
+          }
+        },
+        {
+          "type": "text-line",
+          "settings": {
+            "text": "intention.",
+            "size_override": "jumbo",
+            "font_override": "accent"
+          }
+        },
+        {
+          "type": "text-line",
+          "settings": {
+            "text": "Built to last.",
+            "size_override": "large"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
