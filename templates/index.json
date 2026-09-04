@@ -79,15 +79,15 @@
     },
     "manifesto": {
       "type": "text-reveal",
-      "blocks": [
-        {
+      "blocks": {
+        "line_1": {
           "type": "text-line",
           "settings": {
             "text": "Designed with",
             "size_override": "large"
           }
         },
-        {
+        "line_2": {
           "type": "text-line",
           "settings": {
             "text": "intention.",
@@ -95,14 +95,15 @@
             "font_override": "accent"
           }
         },
-        {
+        "line_3": {
           "type": "text-line",
           "settings": {
             "text": "Built to last.",
             "size_override": "large"
           }
         }
-      ],
+      },
+      "block_order": ["line_1", "line_2", "line_3"],
       "settings": {
         "animation_style": "fade-up",
         "text_alignment": "center",
@@ -220,8 +221,8 @@
     },
     "showcase": {
       "type": "horizontal-showcase",
-      "blocks": [
-        {
+      "blocks": {
+        "card_1": {
           "type": "showcase-card",
           "settings": {
             "heading": "Summer edit",
@@ -229,7 +230,7 @@
             "link_label": "Explore"
           }
         },
-        {
+        "card_2": {
           "type": "showcase-card",
           "settings": {
             "heading": "Best sellers",
@@ -237,7 +238,7 @@
             "link_label": "Explore"
           }
         },
-        {
+        "card_3": {
           "type": "showcase-card",
           "settings": {
             "heading": "New in",
@@ -245,7 +246,8 @@
             "link_label": "Explore"
           }
         }
-      ],
+      },
+      "block_order": ["card_1", "card_2", "card_3"],
       "settings": {
         "heading": "Discover",
         "heading_alignment": "left",
