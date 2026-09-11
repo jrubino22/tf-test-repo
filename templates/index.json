@@ -103,28 +103,30 @@
       }
     },
     "manifesto": {
-      "type": "text-reveal",
+      "type": "text-dispersion",
       "blocks": {
         "line_1": {
           "type": "text-line",
           "settings": {
-            "text": "Designed with",
-            "size_override": "large"
+            "text": "Designed with intention.",
+            "size_preset": "display",
+            "font": "heading"
           }
         },
         "line_2": {
           "type": "text-line",
           "settings": {
-            "text": "intention.",
-            "size_override": "jumbo",
-            "font_override": "accent"
+            "text": "Built to last.",
+            "size_preset": "display",
+            "font": "accent"
           }
         },
         "line_3": {
           "type": "text-line",
           "settings": {
-            "text": "Built to last.",
-            "size_override": "large"
+            "text": "Made for you.",
+            "size_preset": "display",
+            "font": "heading"
           }
         }
       },
@@ -134,276 +136,149 @@
         "line_3"
       ],
       "settings": {
-        "animation_style": "fade-up",
         "text_alignment": "center",
         "gap": 16,
+        "section_height": "large",
         "section_width": "page-width",
-        "section_height": "medium",
         "padding-block-start": 80,
         "padding-block-end": 80
       }
     },
+    "story": {
+      "type": "scroll-narrative",
+      "blocks": {
+        "chapter_1": {
+          "type": "chapter",
+          "settings": {
+            "heading": "<h3>Our Beginning</h3>",
+            "body": "<p>Every product starts with a question: does this need to exist? We founded this brand on the belief that less, done better, is more.</p>",
+            "background_color": "#f5f0eb"
+          }
+        },
+        "chapter_2": {
+          "type": "chapter",
+          "settings": {
+            "heading": "<h3>Our Process</h3>",
+            "body": "<p>From sketch to stitch, every detail is considered. We work with artisans who share our obsession with craft, using materials that age beautifully.</p>",
+            "background_color": "#e8e2da"
+          }
+        },
+        "chapter_3": {
+          "type": "chapter",
+          "settings": {
+            "heading": "<h3>Our Promise</h3>",
+            "body": "<p>We believe great design should be felt, not explained. Each piece is a quiet statement — built to become part of your story.</p>",
+            "background_color": "#dbd4ca"
+          }
+        }
+      },
+      "block_order": [
+        "chapter_1",
+        "chapter_2",
+        "chapter_3"
+      ],
+      "settings": {
+        "section_height_multiplier": 100,
+        "section_width": "full-width",
+        "padding-block-start": 0,
+        "padding-block-end": 0
+      }
+    },
     "products": {
-      "type": "stagger-grid",
+      "type": "product-velocity",
       "settings": {
         "collection": "all",
         "heading": "New arrivals",
         "show_heading": true,
-        "heading_type_preset": "h3",
-        "show_view_all": true,
-        "view_all_label": "View all",
         "max_products": 8,
-        "columns": 3,
-        "column_offset": 48,
-        "card_gap": 16,
+        "columns_desktop": 3,
         "card_border_radius": 8,
-        "image_ratio": "portrait",
-        "show_price": true,
-        "show_vendor": false,
-        "animate_on_scroll": true,
         "section_width": "page-width",
         "padding-block-start": 48,
         "padding-block-end": 48
       }
     },
-    "ticker": {
-      "type": "marquee",
+    "collections": {
+      "type": "aperture-collections",
       "blocks": {
-        "text_1": {
-          "type": "text",
-          "settings": {
-            "text": "<p>Free shipping on all orders</p>",
-            "width": "fit-content",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap"
-          }
+        "portal_1": {
+          "type": "portal",
+          "settings": {}
         },
-        "text_2": {
-          "type": "text",
-          "settings": {
-            "text": "<p>·</p>",
-            "width": "fit-content",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap"
-          }
+        "portal_2": {
+          "type": "portal",
+          "settings": {}
         },
-        "text_3": {
-          "type": "text",
-          "settings": {
-            "text": "<p>New arrivals every week</p>",
-            "width": "fit-content",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap"
-          }
-        },
-        "text_4": {
-          "type": "text",
-          "settings": {
-            "text": "<p>·</p>",
-            "width": "fit-content",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap"
-          }
-        },
-        "text_5": {
-          "type": "text",
-          "settings": {
-            "text": "<p>Designed with care</p>",
-            "width": "fit-content",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap"
-          }
+        "portal_3": {
+          "type": "portal",
+          "settings": {}
         }
       },
       "block_order": [
-        "text_1",
-        "text_2",
-        "text_3",
-        "text_4",
-        "text_5"
-      ],
-      "settings": {
-        "movement_direction": "normal",
-        "padding-block-start": 24,
-        "padding-block-end": 24,
-        "gap_between_elements": 48
-      }
-    },
-    "showcase": {
-      "type": "horizontal-showcase",
-      "blocks": {
-        "card_1": {
-          "type": "showcase-card",
-          "settings": {
-            "heading": "Summer edit",
-            "description": "Explore our curated selection",
-            "link_label": "Explore"
-          }
-        },
-        "card_2": {
-          "type": "showcase-card",
-          "settings": {
-            "heading": "Best sellers",
-            "description": "Our most popular pieces",
-            "link_label": "Explore"
-          }
-        },
-        "card_3": {
-          "type": "showcase-card",
-          "settings": {
-            "heading": "New in",
-            "description": "The latest additions",
-            "link_label": "Explore"
-          }
-        }
-      },
-      "block_order": [
-        "card_1",
-        "card_2",
-        "card_3"
+        "portal_1",
+        "portal_2",
+        "portal_3"
       ],
       "settings": {
         "heading": "Discover",
-        "heading_alignment": "left",
-        "card_width": 400,
-        "card_gap": 24,
-        "card_border_radius": 16,
-        "section_width": "full-width",
+        "show_heading": true,
+        "columns_desktop": 3,
+        "aperture_start": 20,
+        "gap": 24,
+        "section_width": "page-width",
         "padding-block-start": 60,
         "padding-block-end": 60
       }
     },
-    "editorial": {
-      "type": "media-with-content",
-      "blocks": {
-        "media": {
-          "type": "_media-without-appearance",
-          "static": true,
-          "settings": {}
-        },
-        "content": {
-          "type": "_content-without-appearance",
-          "static": true,
-          "settings": {
-            "horizontal_alignment_flex_direction_column": "flex-start",
-            "vertical_alignment_flex_direction_column": "space-between"
-          },
-          "blocks": {
-            "heading": {
-              "type": "text",
-              "settings": {
-                "text": "<h3>Our story</h3>",
-                "type_preset": "h3"
-              }
-            },
-            "body": {
-              "type": "text",
-              "settings": {
-                "text": "<p>Every product we make starts with a question: does this need to exist? If the answer is yes, we craft it with intention, using materials that respect both the maker and the wearer.</p>",
-                "max_width": "narrow",
-                "type_preset": "rte"
-              }
-            },
-            "button": {
-              "type": "button",
-              "settings": {
-                "label": "Learn more",
-                "link": "",
-                "style_class": "button-unstyled"
-              }
-            }
-          },
-          "block_order": [
-            "heading",
-            "body",
-            "button"
-          ]
-        }
-      },
-      "settings": {
-        "media_position": "left",
-        "media_width": "medium",
-        "media_height": "60svh",
-        "section_width": "page-width",
-        "padding-block-start": 0,
-        "padding-block-end": 0
-      }
-    },
     "closing": {
-      "type": "section",
+      "type": "perspective-panels",
       "blocks": {
-        "quote_text": {
-          "type": "text",
+        "panel_1": {
+          "type": "panel",
           "settings": {
-            "text": "<h2>We believe great design should be felt, not explained.</h2>",
-            "width": "100%",
-            "max_width": "narrow",
-            "alignment": "center",
-            "type_preset": "h2"
+            "heading": "Summer Edit",
+            "body": "Explore our curated selection of seasonal essentials.",
+            "link_label": "Explore"
           }
         },
-        "quote_button": {
-          "type": "button",
+        "panel_2": {
+          "type": "panel",
           "settings": {
-            "label": "Start exploring",
-            "link": "shopify://collections/all",
-            "style_class": "button-unstyled"
+            "heading": "Best Sellers",
+            "body": "Discover the pieces our community loves most.",
+            "link_label": "Explore"
+          }
+        },
+        "panel_3": {
+          "type": "panel",
+          "settings": {
+            "heading": "New In",
+            "body": "The latest additions to our ever-evolving collection.",
+            "link_label": "Explore"
           }
         }
       },
       "block_order": [
-        "quote_text",
-        "quote_button"
+        "panel_1",
+        "panel_2",
+        "panel_3"
       ],
       "settings": {
-        "content_direction": "column",
-        "horizontal_alignment_flex_direction_column": "center",
-        "vertical_alignment_flex_direction_column": "center",
-        "gap": 16,
+        "perspective_depth": 1000,
+        "fan_spread": 25,
+        "columns_flat": 3,
         "section_width": "page-width",
-        "section_height": "medium",
-        "background_media": "none",
-        "border": "none",
-        "border_width": 1,
-        "border_opacity": 100,
-        "border_radius": 0,
-        "padding-block-start": 64,
-        "padding-block-end": 64
+        "padding-block-start": 60,
+        "padding-block-end": 60
       }
     }
   },
   "order": [
     "opening",
     "manifesto",
+    "story",
     "products",
-    "ticker",
-    "showcase",
-    "editorial",
+    "collections",
     "closing"
   ]
 }
