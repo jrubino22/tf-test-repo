@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "opening": {
@@ -5,6 +14,7 @@
       "blocks": {
         "slide_1": {
           "type": "_layered-slide",
+          "settings": {},
           "blocks": {
             "heading_1": {
               "type": "text",
@@ -22,10 +32,14 @@
               }
             }
           },
-          "block_order": ["heading_1", "button_1"]
+          "block_order": [
+            "heading_1",
+            "button_1"
+          ]
         },
         "slide_2": {
           "type": "_layered-slide",
+          "settings": {},
           "blocks": {
             "heading_2": {
               "type": "text",
@@ -43,10 +57,14 @@
               }
             }
           },
-          "block_order": ["heading_2", "button_2"]
+          "block_order": [
+            "heading_2",
+            "button_2"
+          ]
         },
         "slide_3": {
           "type": "_layered-slide",
+          "settings": {},
           "blocks": {
             "heading_3": {
               "type": "text",
@@ -64,10 +82,17 @@
               }
             }
           },
-          "block_order": ["heading_3", "button_3"]
+          "block_order": [
+            "heading_3",
+            "button_3"
+          ]
         }
       },
-      "block_order": ["slide_1", "slide_2", "slide_3"],
+      "block_order": [
+        "slide_1",
+        "slide_2",
+        "slide_3"
+      ],
       "settings": {
         "section_width": "full-width",
         "height": "large",
@@ -103,13 +128,17 @@
           }
         }
       },
-      "block_order": ["line_1", "line_2", "line_3"],
+      "block_order": [
+        "line_1",
+        "line_2",
+        "line_3"
+      ],
       "settings": {
         "animation_style": "fade-up",
         "text_alignment": "center",
-        "section_height": "medium",
-        "section_width": "page-width",
         "gap": 16,
+        "section_width": "page-width",
+        "section_height": "medium",
         "padding-block-start": 80,
         "padding-block-end": 80
       }
@@ -144,74 +173,80 @@
           "type": "text",
           "settings": {
             "text": "<p>Free shipping on all orders</p>",
+            "width": "fit-content",
             "type_preset": "custom",
             "font": "var(--font-body--family)",
             "font_size": "var(--font-size--h4)",
             "line_height": "tight",
             "letter_spacing": "tight",
             "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "wrap": "nowrap"
           }
         },
         "text_2": {
           "type": "text",
           "settings": {
             "text": "<p>·</p>",
+            "width": "fit-content",
             "type_preset": "custom",
             "font": "var(--font-body--family)",
             "font_size": "var(--font-size--h4)",
             "line_height": "tight",
             "letter_spacing": "tight",
             "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "wrap": "nowrap"
           }
         },
         "text_3": {
           "type": "text",
           "settings": {
             "text": "<p>New arrivals every week</p>",
+            "width": "fit-content",
             "type_preset": "custom",
             "font": "var(--font-body--family)",
             "font_size": "var(--font-size--h4)",
             "line_height": "tight",
             "letter_spacing": "tight",
             "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "wrap": "nowrap"
           }
         },
         "text_4": {
           "type": "text",
           "settings": {
             "text": "<p>·</p>",
+            "width": "fit-content",
             "type_preset": "custom",
             "font": "var(--font-body--family)",
             "font_size": "var(--font-size--h4)",
             "line_height": "tight",
             "letter_spacing": "tight",
             "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "wrap": "nowrap"
           }
         },
         "text_5": {
           "type": "text",
           "settings": {
             "text": "<p>Designed with care</p>",
+            "width": "fit-content",
             "type_preset": "custom",
             "font": "var(--font-body--family)",
             "font_size": "var(--font-size--h4)",
             "line_height": "tight",
             "letter_spacing": "tight",
             "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "wrap": "nowrap"
           }
         }
       },
-      "block_order": ["text_1", "text_2", "text_3", "text_4", "text_5"],
+      "block_order": [
+        "text_1",
+        "text_2",
+        "text_3",
+        "text_4",
+        "text_5"
+      ],
       "settings": {
         "movement_direction": "normal",
         "padding-block-start": 24,
@@ -247,7 +282,11 @@
           }
         }
       },
-      "block_order": ["card_1", "card_2", "card_3"],
+      "block_order": [
+        "card_1",
+        "card_2",
+        "card_3"
+      ],
       "settings": {
         "heading": "Discover",
         "heading_alignment": "left",
@@ -264,7 +303,8 @@
       "blocks": {
         "media": {
           "type": "_media-without-appearance",
-          "static": true
+          "static": true,
+          "settings": {}
         },
         "content": {
           "type": "_content-without-appearance",
@@ -285,8 +325,8 @@
               "type": "text",
               "settings": {
                 "text": "<p>Every product we make starts with a question: does this need to exist? If the answer is yes, we craft it with intention, using materials that respect both the maker and the wearer.</p>",
-                "type_preset": "rte",
-                "max_width": "narrow"
+                "max_width": "narrow",
+                "type_preset": "rte"
               }
             },
             "button": {
@@ -298,7 +338,11 @@
               }
             }
           },
-          "block_order": ["heading", "body", "button"]
+          "block_order": [
+            "heading",
+            "body",
+            "button"
+          ]
         }
       },
       "settings": {
@@ -317,10 +361,10 @@
           "type": "text",
           "settings": {
             "text": "<h2>We believe great design should be felt, not explained.</h2>",
-            "type_preset": "h2",
             "width": "100%",
             "max_width": "narrow",
-            "alignment": "center"
+            "alignment": "center",
+            "type_preset": "h2"
           }
         },
         "quote_button": {
@@ -332,7 +376,10 @@
           }
         }
       },
-      "block_order": ["quote_text", "quote_button"],
+      "block_order": [
+        "quote_text",
+        "quote_button"
+      ],
       "settings": {
         "content_direction": "column",
         "horizontal_alignment_flex_direction_column": "center",
