@@ -1,0 +1,241 @@
+<script
+  src="{{ 'scroll-marquee.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
+  endif
+%}
+
+<div
+  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+></div>
+<scroll-marquee-section
+  class="section section--full-width spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  style="
+    {%- render 'spacing-style', settings: section.settings %};
+    --marquee-font-size: {{ section.settings.font_size }}px;
+    --marquee-speed: {{ section.settings.speed }}s;
+    --marquee-text-transform: {{ section.settings.text_transform }};
+    --marquee-letter-spacing: {{ section.settings.letter_spacing }}px;
+    --marquee-gap: {{ section.settings.gap }}px;
+    --marquee-direction: normal;
+  "
+>
+  <div class="scroll-marquee__track" ref="track">
+    {% for block in section.blocks %}
+      {% if block.type == 'text-item' %}
+        <span class="scroll-marquee__item" {{ block.shopify_attributes }}>
+          {{ block.settings.text }}
+        </span>
+      {% elsif block.type == 'separator' %}
+        <span class="scroll-marquee__separator" {{ block.shopify_attributes }} aria-hidden="true">
+          {{ block.settings.character }}
+        </span>
+      {% endif %}
+    {% endfor %}
+  </div>
+</scroll-marquee-section>
+
+{% stylesheet %}
+  scroll-marquee-section {
+    display: block;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scroll-marquee__track {
+    display: flex;
+    align-items: center;
+    gap: var(--marquee-gap, 48px);
+    white-space: nowrap;
+    will-change: transform;
+    width: max-content;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-marquee__track {
+      animation: scroll-marquee-slide var(--marquee-speed, 60s) linear infinite;
+      animation-direction: var(--marquee-direction, normal);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-marquee__track {
+      animation: none;
+    }
+  }
+
+  @keyframes scroll-marquee-slide {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  .scroll-marquee__item {
+    font-family: var(--font-heading--family);
+    font-size: var(--marquee-font-size, 48px);
+    font-weight: var(--font-heading--weight, 700);
+    line-height: 1;
+    text-transform: var(--marquee-text-transform, uppercase);
+    letter-spacing: var(--marquee-letter-spacing, 4px);
+    flex-shrink: 0;
+  }
+
+  .scroll-marquee__separator {
+    font-family: var(--font-heading--family);
+    font-size: var(--marquee-font-size, 48px);
+    font-weight: var(--font-heading--weight, 700);
+    line-height: 1;
+    opacity: 0.4;
+    flex-shrink: 0;
+  }
+
+  @media screen and (max-width: 768px) {
+    scroll-marquee-section {
+      --marquee-font-size: calc(var(--marquee-font-size, 48px) * 0.6);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Scroll marquee",
+  "tag": "section",
+  "class": "section-wrapper",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 16,
+      "max": 120,
+      "step": 4,
+      "default": 48,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Speed (seconds)",
+      "min": 10,
+      "max": 200,
+      "step": 10,
+      "default": 60
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "Text transform",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "uppercase", "label": "Uppercase" },
+        { "value": "lowercase", "label": "Lowercase" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing",
+      "label": "Letter spacing",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "default": 4,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Gap",
+      "min": 8,
+      "max": 120,
+      "step": 4,
+      "default": 48,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 24,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text-item",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Marquee text"
+        }
+      ]
+    },
+    {
+      "type": "separator",
+      "name": "Separator",
+      "settings": [
+        {
+          "type": "text",
+          "id": "character",
+          "label": "Character",
+          "default": "·"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Scroll marquee",
+      "category": "Content",
+      "blocks": [
+        { "type": "text-item", "settings": { "text": "New Collection" } },
+        { "type": "separator", "settings": { "character": "·" } },
+        { "type": "text-item", "settings": { "text": "Free Shipping" } },
+        { "type": "separator", "settings": { "character": "·" } },
+        { "type": "text-item", "settings": { "text": "Designed Different" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

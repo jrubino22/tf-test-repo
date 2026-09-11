@@ -1,0 +1,254 @@
+<script
+  src="{{ 'stats-counters.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
+  endif
+%}
+
+<div
+  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+></div>
+<stats-counters-section
+  class="section section--{{ section.settings.section_width }} spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  style="
+    {%- render 'spacing-style', settings: section.settings %};
+    --stats-columns: {{ section.settings.columns }};
+    --stats-gap: {{ section.settings.gap }}px;
+  "
+>
+  {% if section.settings.heading != blank %}
+    <div class="stats-counters__header">
+      <h2 class="stats-counters__heading">{{ section.settings.heading }}</h2>
+    </div>
+  {% endif %}
+
+  <div class="stats-counters__grid">
+    {% for block in section.blocks %}
+      <div class="stats-counters__item" {{ block.shopify_attributes }}>
+        <div class="stats-counters__number-wrapper">
+          {% if block.settings.prefix != blank %}
+            <span class="stats-counters__prefix">{{ block.settings.prefix }}</span>
+          {% endif %}
+          <span
+            class="stats-counters__number"
+            ref="stats[]"
+            data-target="{{ block.settings.value }}"
+          >
+            0
+          </span>
+          {% if block.settings.suffix != blank %}
+            <span class="stats-counters__suffix">{{ block.settings.suffix }}</span>
+          {% endif %}
+        </div>
+        {% if block.settings.label != blank %}
+          <p class="stats-counters__label">{{ block.settings.label }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</stats-counters-section>
+
+{% stylesheet %}
+  stats-counters-section {
+    display: block;
+    position: relative;
+  }
+
+  .stats-counters__header {
+    text-align: center;
+    margin-block-end: var(--gap-xl, 2.5rem);
+  }
+
+  .stats-counters__heading {
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 3vw, var(--font-size--3xl, 2rem));
+    font-weight: var(--font-heading--weight, 700);
+    line-height: var(--line-height--display-tight, 1.0);
+    margin: 0;
+  }
+
+  .stats-counters__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--stats-columns, 4), 1fr);
+    gap: var(--stats-gap, 32px);
+    text-align: center;
+  }
+
+  .stats-counters__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap-xs, 0.5rem);
+  }
+
+  .stats-counters__number-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 5vw, var(--font-size--5xl, 3rem));
+    font-weight: var(--font-heading--weight, 700);
+    line-height: 1;
+  }
+
+  .stats-counters__prefix,
+  .stats-counters__suffix {
+    font-size: 0.7em;
+  }
+
+  .stats-counters__label {
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--sm, 0.875rem);
+    line-height: var(--line-height--body-normal, 1.4);
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  @media screen and (max-width: 768px) {
+    .stats-counters__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stats-counters__number-wrapper {
+      font-size: clamp(1.75rem, 8vw, 2.5rem);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Stats counters",
+  "tag": "section",
+  "class": "section-wrapper",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "By The Numbers"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Gap",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 32,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color"
+    },
+    {
+      "type": "header",
+      "content": "Size"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Section width",
+      "options": [
+        { "value": "page-width", "label": "Page width" },
+        { "value": "full-width", "label": "Full width" }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 48,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 48,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "settings": [
+        {
+          "type": "number",
+          "id": "value",
+          "label": "Value",
+          "default": 100
+        },
+        {
+          "type": "text",
+          "id": "prefix",
+          "label": "Prefix"
+        },
+        {
+          "type": "text",
+          "id": "suffix",
+          "label": "Suffix",
+          "default": "+"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Stat label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Stats counters",
+      "category": "Content",
+      "blocks": [
+        { "type": "stat", "settings": { "value": 150, "suffix": "+", "label": "Products" } },
+        { "type": "stat", "settings": { "value": 12, "label": "Countries" } },
+        { "type": "stat", "settings": { "value": 50000, "suffix": "+", "label": "Customers" } },
+        { "type": "stat", "settings": { "value": 99, "suffix": "%", "label": "Satisfaction" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

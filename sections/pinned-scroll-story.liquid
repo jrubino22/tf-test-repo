@@ -1,0 +1,301 @@
+<script
+  src="{{ 'pinned-scroll-story.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
+  endif
+%}
+
+<div
+  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+></div>
+<pinned-scroll-story-section
+  class="section section--{{ section.settings.section_width }} spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  style="{%- render 'spacing-style', settings: section.settings %}"
+>
+  <div class="pinned-story__sticky" ref="sticky">
+    {% for i in (1..3) %}
+      {% liquid
+        assign image_key = 'image_' | append: i
+        assign image_alt_key = 'image_alt_' | append: i
+        assign heading_key = 'heading_' | append: i
+        assign fallback_svg = 'pinned-story-' | append: i | append: '.svg'
+        assign current_image = section.settings[image_key]
+        assign current_alt = section.settings[image_alt_key]
+        assign current_heading = section.settings[heading_key]
+      %}
+      <div class="pinned-story__state{% if forloop.first %} is-active{% endif %}" ref="states[]">
+        <div class="pinned-story__state-media">
+          {% if current_image != blank %}
+            {{
+              current_image
+              | image_url: width: current_image.width
+              | image_tag:
+                loading: 'lazy',
+                sizes: '100vw',
+                widths: '375,750,1100,1500,1920',
+                alt: current_alt,
+                class: 'pinned-story__state-img'
+            }}
+          {% else %}
+            <img
+              src="{{ fallback_svg | asset_url }}"
+              alt="{{ current_alt }}"
+              width="1440"
+              height="900"
+              loading="lazy"
+              class="pinned-story__state-img"
+            >
+          {% endif %}
+        </div>
+        {% if current_heading != blank %}
+          <div class="pinned-story__state-content">
+            <h2 class="pinned-story__state-heading">{{ current_heading }}</h2>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="pinned-story__scroll-spacer"></div>
+</pinned-scroll-story-section>
+
+{% stylesheet %}
+  pinned-scroll-story-section {
+    position: relative;
+    display: block;
+  }
+
+  .pinned-story__sticky {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  .pinned-story__scroll-spacer {
+    height: 200vh;
+    pointer-events: none;
+  }
+
+  .pinned-story__state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.6s var(--ease-out-cubic, cubic-bezier(0.33, 1, 0.68, 1));
+    pointer-events: none;
+  }
+
+  .pinned-story__state.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .pinned-story__state-media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .pinned-story__state-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .pinned-story__state-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding-inline: var(--padding-md, 1.5rem);
+    max-width: 48rem;
+  }
+
+  .pinned-story__state-heading {
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 5vw, var(--font-size--5xl, 3rem));
+    font-weight: var(--font-heading--weight, 700);
+    line-height: var(--line-height--display-tight, 1.0);
+    color: #fff;
+    margin: 0;
+    text-shadow: 0 2px 20px rgb(0 0 0 / 0.3);
+  }
+
+  /* Mobile: stack vertically, no pinning */
+  @media screen and (max-width: 768px) {
+    .pinned-story__sticky {
+      position: relative;
+      height: auto;
+    }
+
+    .pinned-story__scroll-spacer {
+      display: none;
+    }
+
+    .pinned-story__state {
+      position: relative;
+      inset: auto;
+      min-height: 70svh;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .pinned-story__state {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+
+      .pinned-story__state.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pinned-story__state {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pinned-story__state {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Pinned scroll story",
+  "tag": "section",
+  "class": "section-wrapper",
+  "settings": [
+    {
+      "type": "header",
+      "content": "State 1"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_1",
+      "label": "Image 1"
+    },
+    {
+      "type": "text",
+      "id": "image_alt_1",
+      "label": "Image 1 alt text",
+      "default": "Story state one"
+    },
+    {
+      "type": "text",
+      "id": "heading_1",
+      "label": "Heading 1",
+      "default": "Imagine More"
+    },
+    {
+      "type": "header",
+      "content": "State 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_2",
+      "label": "Image 2"
+    },
+    {
+      "type": "text",
+      "id": "image_alt_2",
+      "label": "Image 2 alt text",
+      "default": "Story state two"
+    },
+    {
+      "type": "text",
+      "id": "heading_2",
+      "label": "Heading 2",
+      "default": "Create Freely"
+    },
+    {
+      "type": "header",
+      "content": "State 3"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_3",
+      "label": "Image 3"
+    },
+    {
+      "type": "text",
+      "id": "image_alt_3",
+      "label": "Image 3 alt text",
+      "default": "Story state three"
+    },
+    {
+      "type": "text",
+      "id": "heading_3",
+      "label": "Heading 3",
+      "default": "Live Bold"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color"
+    },
+    {
+      "type": "header",
+      "content": "Size"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Section width",
+      "options": [
+        { "value": "page-width", "label": "Page width" },
+        { "value": "full-width", "label": "Full width" }
+      ],
+      "default": "full-width"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 0,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Pinned scroll story",
+      "category": "Storytelling"
+    }
+  ]
+}
+{% endschema %}

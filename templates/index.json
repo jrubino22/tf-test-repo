@@ -1,134 +1,150 @@
 {
   "sections": {
-    "opening": {
-      "type": "layered-slideshow",
-      "blocks": {
-        "slide_1": {
-          "type": "_layered-slide",
-          "blocks": {
-            "heading_1": {
-              "type": "text",
-              "settings": {
-                "text": "<h2>New season</h2>",
-                "type_preset": "h2"
-              }
-            },
-            "button_1": {
-              "type": "button",
-              "settings": {
-                "label": "Shop now",
-                "link": "shopify://collections/all",
-                "style_class": "button-unstyled"
-              }
-            }
-          },
-          "block_order": ["heading_1", "button_1"]
-        },
-        "slide_2": {
-          "type": "_layered-slide",
-          "blocks": {
-            "heading_2": {
-              "type": "text",
-              "settings": {
-                "text": "<h2>Curated for you</h2>",
-                "type_preset": "h2"
-              }
-            },
-            "button_2": {
-              "type": "button",
-              "settings": {
-                "label": "Explore",
-                "link": "shopify://collections/all",
-                "style_class": "button-unstyled"
-              }
-            }
-          },
-          "block_order": ["heading_2", "button_2"]
-        },
-        "slide_3": {
-          "type": "_layered-slide",
-          "blocks": {
-            "heading_3": {
-              "type": "text",
-              "settings": {
-                "text": "<h2>Made different</h2>",
-                "type_preset": "h2"
-              }
-            },
-            "button_3": {
-              "type": "button",
-              "settings": {
-                "label": "Discover",
-                "link": "shopify://collections/all",
-                "style_class": "button-unstyled"
-              }
-            }
-          },
-          "block_order": ["heading_3", "button_3"]
-        }
-      },
-      "block_order": ["slide_1", "slide_2", "slide_3"],
+    "hero": {
+      "type": "creative-hero",
       "settings": {
+        "image_alt": "Hero background",
+        "heading": "Push Boundaries",
+        "subheading": "Design beyond convention",
+        "button_label": "Explore Collection",
+        "overlay_opacity": 40,
         "section_width": "full-width",
-        "height": "large",
-        "corner_radius": 0,
-        "border_width": 1,
         "padding-block-start": 0,
         "padding-block-end": 0
       }
     },
-    "manifesto": {
-      "type": "text-reveal",
+    "story": {
+      "type": "pinned-scroll-story",
+      "settings": {
+        "image_alt_1": "Story state one",
+        "heading_1": "Imagine More",
+        "image_alt_2": "Story state two",
+        "heading_2": "Create Freely",
+        "image_alt_3": "Story state three",
+        "heading_3": "Live Bold",
+        "section_width": "full-width",
+        "padding-block-start": 0,
+        "padding-block-end": 0
+      }
+    },
+    "gallery": {
+      "type": "horizontal-scroll-gallery",
       "blocks": {
-        "line_1": {
-          "type": "text-line",
+        "gallery_1": {
+          "type": "gallery-item",
           "settings": {
-            "text": "Designed with",
-            "size_override": "large"
+            "image_alt": "Gallery image 1",
+            "title": "Look One"
           }
         },
-        "line_2": {
-          "type": "text-line",
+        "gallery_2": {
+          "type": "gallery-item",
           "settings": {
-            "text": "intention.",
-            "size_override": "jumbo",
-            "font_override": "accent"
+            "image_alt": "Gallery image 2",
+            "title": "Look Two"
           }
         },
-        "line_3": {
-          "type": "text-line",
+        "gallery_3": {
+          "type": "gallery-item",
           "settings": {
-            "text": "Built to last.",
-            "size_override": "large"
+            "image_alt": "Gallery image 3",
+            "title": "Look Three"
+          }
+        },
+        "gallery_4": {
+          "type": "gallery-item",
+          "settings": {
+            "image_alt": "Gallery image 4",
+            "title": "Look Four"
+          }
+        },
+        "gallery_5": {
+          "type": "gallery-item",
+          "settings": {
+            "image_alt": "Gallery image 5",
+            "title": "Look Five"
           }
         }
       },
-      "block_order": ["line_1", "line_2", "line_3"],
+      "block_order": ["gallery_1", "gallery_2", "gallery_3", "gallery_4", "gallery_5"],
       "settings": {
-        "animation_style": "fade-up",
-        "text_alignment": "center",
-        "section_height": "medium",
-        "section_width": "page-width",
-        "gap": 16,
-        "padding-block-start": 80,
-        "padding-block-end": 80
+        "heading": "Gallery",
+        "item_width": 480,
+        "item_gap": 24,
+        "section_width": "full-width",
+        "padding-block-start": 48,
+        "padding-block-end": 48
       }
     },
-    "products": {
-      "type": "stagger-grid",
+    "editorial": {
+      "type": "editorial-split",
       "settings": {
-        "collection": "all",
-        "heading": "New arrivals",
+        "image_alt": "Editorial image",
+        "heading": "Crafted With Intent",
+        "body_text": "Every piece in our collection is designed with purpose — blending modern aesthetics with enduring quality. We believe in creating products that stand the test of time.",
+        "button_label": "Learn More",
+        "reverse_layout": false,
+        "image_height": "75svh",
+        "section_width": "page-width",
+        "padding-block-start": 48,
+        "padding-block-end": 48
+      }
+    },
+    "stats": {
+      "type": "stats-counters",
+      "blocks": {
+        "stat_1": {
+          "type": "stat",
+          "settings": {
+            "value": 150,
+            "suffix": "+",
+            "label": "Products"
+          }
+        },
+        "stat_2": {
+          "type": "stat",
+          "settings": {
+            "value": 12,
+            "label": "Countries"
+          }
+        },
+        "stat_3": {
+          "type": "stat",
+          "settings": {
+            "value": 50000,
+            "suffix": "+",
+            "label": "Customers"
+          }
+        },
+        "stat_4": {
+          "type": "stat",
+          "settings": {
+            "value": 99,
+            "suffix": "%",
+            "label": "Satisfaction"
+          }
+        }
+      },
+      "block_order": ["stat_1", "stat_2", "stat_3", "stat_4"],
+      "settings": {
+        "heading": "By The Numbers",
+        "columns": 4,
+        "gap": 32,
+        "section_width": "page-width",
+        "padding-block-start": 48,
+        "padding-block-end": 48
+      }
+    },
+    "collection": {
+      "type": "collection-reveal-grid",
+      "settings": {
+        "heading": "Featured Collection",
         "show_heading": true,
-        "heading_type_preset": "h3",
-        "show_view_all": true,
-        "view_all_label": "View all",
         "max_products": 8,
-        "columns": 3,
-        "column_offset": 48,
-        "card_gap": 16,
-        "card_border_radius": 8,
+        "columns": 4,
+        "gap": 20,
         "image_ratio": "portrait",
+        "card_radius": 0,
         "show_price": true,
         "show_vendor": false,
         "animate_on_scroll": true,
@@ -137,226 +153,73 @@
         "padding-block-end": 48
       }
     },
-    "ticker": {
-      "type": "marquee",
+    "marquee": {
+      "type": "scroll-marquee",
       "blocks": {
         "text_1": {
-          "type": "text",
+          "type": "text-item",
           "settings": {
-            "text": "<p>Free shipping on all orders</p>",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "text": "New Collection"
+          }
+        },
+        "sep_1": {
+          "type": "separator",
+          "settings": {
+            "character": "·"
           }
         },
         "text_2": {
-          "type": "text",
+          "type": "text-item",
           "settings": {
-            "text": "<p>·</p>",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "text": "Free Shipping"
+          }
+        },
+        "sep_2": {
+          "type": "separator",
+          "settings": {
+            "character": "·"
           }
         },
         "text_3": {
-          "type": "text",
+          "type": "text-item",
           "settings": {
-            "text": "<p>New arrivals every week</p>",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
-          }
-        },
-        "text_4": {
-          "type": "text",
-          "settings": {
-            "text": "<p>·</p>",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
-          }
-        },
-        "text_5": {
-          "type": "text",
-          "settings": {
-            "text": "<p>Designed with care</p>",
-            "type_preset": "custom",
-            "font": "var(--font-body--family)",
-            "font_size": "var(--font-size--h4)",
-            "line_height": "tight",
-            "letter_spacing": "tight",
-            "case": "none",
-            "wrap": "nowrap",
-            "width": "fit-content"
+            "text": "Designed Different"
           }
         }
       },
-      "block_order": ["text_1", "text_2", "text_3", "text_4", "text_5"],
+      "block_order": ["text_1", "sep_1", "text_2", "sep_2", "text_3"],
       "settings": {
-        "movement_direction": "normal",
+        "font_size": 48,
+        "speed": 60,
+        "text_transform": "uppercase",
+        "letter_spacing": 4,
+        "gap": 48,
         "padding-block-start": 24,
-        "padding-block-end": 24,
-        "gap_between_elements": 48
+        "padding-block-end": 24
       }
     },
-    "showcase": {
-      "type": "horizontal-showcase",
-      "blocks": {
-        "card_1": {
-          "type": "showcase-card",
-          "settings": {
-            "heading": "Summer edit",
-            "description": "Explore our curated selection",
-            "link_label": "Explore"
-          }
-        },
-        "card_2": {
-          "type": "showcase-card",
-          "settings": {
-            "heading": "Best sellers",
-            "description": "Our most popular pieces",
-            "link_label": "Explore"
-          }
-        },
-        "card_3": {
-          "type": "showcase-card",
-          "settings": {
-            "heading": "New in",
-            "description": "The latest additions",
-            "link_label": "Explore"
-          }
-        }
-      },
-      "block_order": ["card_1", "card_2", "card_3"],
+    "cta": {
+      "type": "closing-cta",
       "settings": {
-        "heading": "Discover",
-        "heading_alignment": "left",
-        "card_width": 400,
-        "card_gap": 24,
-        "card_border_radius": 16,
+        "image_alt": "Call to action background",
+        "heading": "Ready to Begin?",
+        "button_label": "Shop Now",
+        "overlay_opacity": 50,
         "section_width": "full-width",
-        "padding-block-start": 60,
-        "padding-block-end": 60
-      }
-    },
-    "editorial": {
-      "type": "media-with-content",
-      "blocks": {
-        "media": {
-          "type": "_media-without-appearance",
-          "static": true
-        },
-        "content": {
-          "type": "_content-without-appearance",
-          "static": true,
-          "settings": {
-            "horizontal_alignment_flex_direction_column": "flex-start",
-            "vertical_alignment_flex_direction_column": "space-between"
-          },
-          "blocks": {
-            "heading": {
-              "type": "text",
-              "settings": {
-                "text": "<h3>Our story</h3>",
-                "type_preset": "h3"
-              }
-            },
-            "body": {
-              "type": "text",
-              "settings": {
-                "text": "<p>Every product we make starts with a question: does this need to exist? If the answer is yes, we craft it with intention, using materials that respect both the maker and the wearer.</p>",
-                "type_preset": "rte",
-                "max_width": "narrow"
-              }
-            },
-            "button": {
-              "type": "button",
-              "settings": {
-                "label": "Learn more",
-                "link": "",
-                "style_class": "button-unstyled"
-              }
-            }
-          },
-          "block_order": ["heading", "body", "button"]
-        }
-      },
-      "settings": {
-        "media_position": "left",
-        "media_width": "medium",
-        "media_height": "60svh",
-        "section_width": "page-width",
-        "padding-block-start": 0,
-        "padding-block-end": 0
-      }
-    },
-    "closing": {
-      "type": "section",
-      "blocks": {
-        "quote_text": {
-          "type": "text",
-          "settings": {
-            "text": "<h2>We believe great design should be felt, not explained.</h2>",
-            "type_preset": "h2",
-            "width": "100%",
-            "max_width": "narrow",
-            "alignment": "center"
-          }
-        },
-        "quote_button": {
-          "type": "button",
-          "settings": {
-            "label": "Start exploring",
-            "link": "shopify://collections/all",
-            "style_class": "button-unstyled"
-          }
-        }
-      },
-      "block_order": ["quote_text", "quote_button"],
-      "settings": {
-        "content_direction": "column",
-        "horizontal_alignment_flex_direction_column": "center",
-        "vertical_alignment_flex_direction_column": "center",
-        "gap": 16,
-        "section_width": "page-width",
-        "section_height": "medium",
-        "background_media": "none",
-        "border": "none",
-        "border_width": 1,
-        "border_opacity": 100,
-        "border_radius": 0,
-        "padding-block-start": 64,
-        "padding-block-end": 64
+        "min_height": "75svh",
+        "padding-block-start": 48,
+        "padding-block-end": 48
       }
     }
   },
   "order": [
-    "opening",
-    "manifesto",
-    "products",
-    "ticker",
-    "showcase",
+    "hero",
+    "story",
+    "gallery",
     "editorial",
-    "closing"
+    "stats",
+    "collection",
+    "marquee",
+    "cta"
   ]
 }
