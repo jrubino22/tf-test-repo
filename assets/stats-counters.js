@@ -25,6 +25,9 @@ class StatsCountersSection extends Component {
   /** @type {number} */
   #animationDuration = 1500;
 
+  /** @type {boolean} */
+  #isInitialObserve = true;
+
   connectedCallback() {
     super.connectedCallback();
     this.#prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -39,6 +42,7 @@ class StatsCountersSection extends Component {
   updatedCallback() {
     this.#cleanup();
     this.#hasAnimated = false;
+    this.#isInitialObserve = true;
     this.#setup();
   }
 
@@ -51,15 +55,24 @@ class StatsCountersSection extends Component {
       return;
     }
 
+    this.#isInitialObserve = true;
+
     this.#observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting && !this.#hasAnimated) {
             this.#hasAnimated = true;
-            this.#startCountAnimation();
             this.#observer?.disconnect();
+
+            // If already in viewport on first observe, show final values immediately
+            if (this.#isInitialObserve) {
+              this.#setFinalValues();
+            } else {
+              this.#startCountAnimation();
+            }
           }
         }
+        this.#isInitialObserve = false;
       },
       { threshold: 0.3 }
     );

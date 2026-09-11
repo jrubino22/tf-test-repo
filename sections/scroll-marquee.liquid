@@ -14,7 +14,7 @@
   class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
 ></div>
 <scroll-marquee-section
-  class="section section--full-width spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  class="section section--{{ section.settings.section_width }} spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
   style="
     {%- render 'spacing-style', settings: section.settings %};
     --marquee-font-size: {{ section.settings.font_size }}px;
@@ -98,8 +98,9 @@
   }
 
   @media screen and (max-width: 768px) {
-    scroll-marquee-section {
-      --marquee-font-size: calc(var(--marquee-font-size, 48px) * 0.6);
+    .scroll-marquee__item,
+    .scroll-marquee__separator {
+      font-size: calc(var(--marquee-font-size, 48px) * 0.6);
     }
   }
 {% endstylesheet %}
@@ -172,6 +173,20 @@
       "type": "color",
       "id": "background_color",
       "label": "Background color"
+    },
+    {
+      "type": "header",
+      "content": "Size"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Section width",
+      "options": [
+        { "value": "page-width", "label": "Page width" },
+        { "value": "full-width", "label": "Full width" }
+      ],
+      "default": "full-width"
     },
     {
       "type": "header",

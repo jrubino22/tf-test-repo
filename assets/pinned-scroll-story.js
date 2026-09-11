@@ -50,12 +50,23 @@ class PinnedScrollStorySection extends Component {
     const states = this.refs.states;
     if (!states || !states.length) return;
 
-    if (this.#prefersReducedMotion || this.#isMobile) {
+    // Desktop reduced-motion: all states visible immediately, no pinning
+    if (this.#prefersReducedMotion && !this.#isMobile) {
       for (const state of states) {
         state.classList.add('is-visible');
+        state.classList.add('is-active');
       }
+      return;
+    }
 
-      if (!this.#isMobile) return;
+    // Mobile: stacked layout with IntersectionObserver reveals
+    if (this.#isMobile) {
+      if (this.#prefersReducedMotion) {
+        for (const state of states) {
+          state.classList.add('is-visible');
+        }
+        return;
+      }
 
       this.#observer = new IntersectionObserver(
         (entries) => {
@@ -70,7 +81,6 @@ class PinnedScrollStorySection extends Component {
       );
 
       for (const state of states) {
-        state.classList.remove('is-visible');
         this.#observer.observe(state);
       }
       return;
