@@ -77,7 +77,7 @@
   }
 
   .pinned-story__scroll-spacer {
-    height: 300vh;
+    height: 200vh;
     pointer-events: none;
   }
 
@@ -164,27 +164,6 @@
         opacity: 1;
         transform: none;
       }
-    }
-  }
-
-  /* Desktop reduced-motion: unpin and show all states stacked */
-  @media screen and (min-width: 769px) and (prefers-reduced-motion: reduce) {
-    .pinned-story__sticky {
-      position: relative;
-      height: auto;
-    }
-
-    .pinned-story__scroll-spacer {
-      display: none;
-    }
-
-    .pinned-story__state {
-      position: relative;
-      inset: auto;
-      min-height: 70svh;
-      opacity: 1;
-      pointer-events: auto;
-      transition: none;
     }
   }
 

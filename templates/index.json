@@ -194,7 +194,6 @@
         "text_transform": "uppercase",
         "letter_spacing": 4,
         "gap": 48,
-        "section_width": "full-width",
         "padding-block-start": 24,
         "padding-block-end": 24
       }
