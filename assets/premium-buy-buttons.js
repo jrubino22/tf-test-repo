@@ -155,9 +155,21 @@ export default class PremiumBuyButtons extends Component {
 
     try {
       const config = fetchConfig('javascript');
-      config.body = JSON.stringify({
-        items: [{ id: parseInt(variantId, 10), quantity }],
-      });
+
+      const item = { id: parseInt(variantId, 10), quantity };
+
+      // Include selling_plan when subscription is selected
+      const form = variantInput.closest('form');
+      if (form?.id) {
+        const sellingPlanInput = document.querySelector(
+          `input[name="selling_plan"][form="${form.id}"]`
+        );
+        if (sellingPlanInput?.value) {
+          item.selling_plan = parseInt(sellingPlanInput.value, 10);
+        }
+      }
+
+      config.body = JSON.stringify({ items: [item] });
 
       const response = await fetch('/cart/add.js', config);
 

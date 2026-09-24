@@ -3,6 +3,7 @@
 {%- liquid
   assign icon_type = block.settings.icon | default: 'lock'
   assign label_text = block.settings.label | default: 'Secure checkout'
+  assign custom_image = block.settings.custom_icon
 -%}
 
 <div
@@ -10,26 +11,32 @@
   style="{% render 'spacing-style', settings: block.settings %}"
   {{ block.shopify_attributes }}
 >
-  <svg class="pbb-trust-badge__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    {%- case icon_type -%}
-      {%- when 'lock' -%}
-        <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      {%- when 'truck' -%}
-        <path d="M10.5 3H1.5v8h9V3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M10.5 6h2.5l2 2.5V11h-4.5V6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="4" cy="12.5" r="1.25" stroke="currentColor" stroke-width="1.25"/>
-        <circle cx="12.5" cy="12.5" r="1.25" stroke="currentColor" stroke-width="1.25"/>
-      {%- when 'refresh' -%}
-        <path d="M1.5 2.5v4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M14.5 13.5v-4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12.8 6A5.5 5.5 0 0 0 3.2 4.5L1.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M3.2 10a5.5 5.5 0 0 0 9.6 1.5l1.7-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      {%- when 'shield' -%}
-        <path d="M8 1.5L2 4v4c0 3.5 2.5 5.5 6 7 3.5-1.5 6-3.5 6-7V4L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    {%- endcase -%}
-  </svg>
+  {%- if custom_image != blank -%}
+    <div class="pbb-trust-badge__icon pbb-trust-badge__icon--custom">
+      {{ custom_image | image_url: width: 32 | image_tag: loading: 'lazy', alt: label_text, class: 'pbb-trust-badge__custom-img' }}
+    </div>
+  {%- else -%}
+    <svg class="pbb-trust-badge__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      {%- case icon_type -%}
+        {%- when 'lock' -%}
+          <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        {%- when 'truck' -%}
+          <path d="M10.5 3H1.5v8h9V3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10.5 6h2.5l2 2.5V11h-4.5V6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="4" cy="12.5" r="1.25" stroke="currentColor" stroke-width="1.25"/>
+          <circle cx="12.5" cy="12.5" r="1.25" stroke="currentColor" stroke-width="1.25"/>
+        {%- when 'refresh' -%}
+          <path d="M1.5 2.5v4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14.5 13.5v-4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12.8 6A5.5 5.5 0 0 0 3.2 4.5L1.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3.2 10a5.5 5.5 0 0 0 9.6 1.5l1.7-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        {%- when 'shield' -%}
+          <path d="M8 1.5L2 4v4c0 3.5 2.5 5.5 6 7 3.5-1.5 6-3.5 6-7V4L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      {%- endcase -%}
+    </svg>
+  {%- endif -%}
   <span class="pbb-trust-badge__label">{{ label_text }}</span>
 </div>
 
@@ -45,6 +52,20 @@
     color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
   }
 
+  .pbb-trust-badge__icon--custom {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pbb-trust-badge__custom-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
   .pbb-trust-badge__label {
     font-size: var(--font-paragraph-small--size, 0.8125rem);
     color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
@@ -58,9 +79,15 @@
   "tag": null,
   "settings": [
     {
+      "type": "image_picker",
+      "id": "custom_icon",
+      "label": "Custom icon"
+    },
+    {
       "type": "select",
       "id": "icon",
       "label": "Icon",
+      "info": "Used when no custom icon is set",
       "options": [
         { "value": "lock", "label": "Lock" },
         { "value": "truck", "label": "Truck" },
