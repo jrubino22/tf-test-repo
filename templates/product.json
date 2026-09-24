@@ -128,31 +128,21 @@
                   },
                   "blocks": {}
                 },
-                "price_tVjtKg": {
-                  "type": "price",
+                "premium_price_block": {
+                  "type": "_premium-price",
                   "settings": {
-                    "show_sale_price_first": true,
-                    "show_installments": true,
-                    "show_tax_info": true,
-                    "type_preset": "paragraph",
-                    "width": "100%",
+                    "show_savings_badge": true,
+                    "show_unit_price": true,
                     "alignment": "left",
-                    "font": "var(--font-body--family)",
-                    "font_size": "1rem",
-                    "line_height": "normal",
-                    "letter_spacing": "normal",
-                    "case": "none",
                     "padding-block-start": 4,
-                    "padding-block-end": 0,
-                    "padding-inline-start": 0,
-                    "padding-inline-end": 0
+                    "padding-block-end": 0
                   },
                   "blocks": {}
                 }
               },
               "block_order": [
                 "text_xpVMaM",
-                "price_tVjtKg"
+                "premium_price_block"
               ]
             },
             "divider_VJhene": {
@@ -168,53 +158,154 @@
               },
               "blocks": {}
             },
-            "variant_picker_R3rGDr": {
-              "type": "variant-picker",
+            "premium_variants": {
+              "type": "_premium-variant-picker",
               "settings": {
-                "variant_style": "buttons",
-                "show_swatches": false,
+                "variant_style": "pills",
+                "show_swatches": true,
+                "low_stock_threshold": 5,
                 "alignment": "left",
                 "padding-block-start": 0,
-                "padding-block-end": 0,
-                "padding-inline-start": 0,
-                "padding-inline-end": 0
+                "padding-block-end": 0
               },
               "blocks": {}
             },
-            "buy_buttons_eYQEYi": {
-              "type": "buy-buttons",
+            "selling_plan": {
+              "type": "_selling-plan-picker",
               "settings": {
-                "stacking": true,
-                "show_pickup_availability": false,
-                "gift_card_form": true,
                 "padding-block-start": 0,
+                "padding-block-end": 0
+              },
+              "blocks": {}
+            },
+            "premium_buy_btns": {
+              "type": "_premium-buy-buttons",
+              "settings": {
+                "button_text": "Add to cart",
+                "show_quantity": true,
+                "show_dynamic_checkout": true,
+                "alignment": "left",
+                "padding-block-start": 0,
+                "padding-block-end": 0
+              },
+              "blocks": {}
+            },
+            "free_shipping": {
+              "type": "_free-shipping-bar",
+              "settings": {
+                "threshold": 75,
+                "padding-block-start": 0,
+                "padding-block-end": 0
+              },
+              "blocks": {}
+            },
+            "delivery_est": {
+              "type": "_delivery-estimate",
+              "settings": {
+                "min_days": 3,
+                "max_days": 7,
+                "cutoff_hour": 14,
+                "show_countdown": true,
+                "padding-block-start": 0,
+                "padding-block-end": 0
+              },
+              "blocks": {}
+            },
+            "trust_group": {
+              "type": "group",
+              "settings": {
+                "content_direction": "row",
+                "vertical_on_mobile": false,
+                "horizontal_alignment": "flex-start",
+                "vertical_alignment": "center",
+                "align_baseline": false,
+                "horizontal_alignment_flex_direction_column": "flex-start",
+                "vertical_alignment_flex_direction_column": "center",
+                "gap": 16,
+                "width": "fill",
+                "custom_width": 100,
+                "width_mobile": "fill",
+                "custom_width_mobile": 100,
+                "height": "fit",
+                "custom_height": 100,
+                "background_media": "none",
+                "video_position": "cover",
+                "background_image_position": "cover",
+                "toggle_overlay": false,
+                "overlay_color": "#00000026",
+                "overlay_style": "solid",
+                "gradient_direction": "to top",
+                "border": "none",
+                "border_width": 1,
+                "border_opacity": 100,
+                "border_radius": 0,
+                "link": "",
+                "open_in_new_tab": false,
+                "placeholder": "",
+                "padding-block-start": 8,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
                 "padding-inline-end": 0
               },
               "blocks": {
-                "quantity": {
-                  "type": "quantity",
-                  "static": true,
-                  "settings": {},
-                  "blocks": {}
-                },
-                "add-to-cart": {
-                  "type": "add-to-cart",
-                  "static": true,
+                "badge_secure": {
+                  "type": "_trust-badge",
                   "settings": {
-                    "style_class": "button"
+                    "icon": "lock",
+                    "label": "Secure checkout",
+                    "padding-block-start": 0,
+                    "padding-block-end": 0
                   },
                   "blocks": {}
                 },
-                "accelerated-checkout": {
-                  "type": "accelerated-checkout",
-                  "static": true,
-                  "settings": {},
+                "badge_shipping": {
+                  "type": "_trust-badge",
+                  "settings": {
+                    "icon": "truck",
+                    "label": "Free shipping",
+                    "padding-block-start": 0,
+                    "padding-block-end": 0
+                  },
+                  "blocks": {}
+                },
+                "badge_returns": {
+                  "type": "_trust-badge",
+                  "settings": {
+                    "icon": "refresh",
+                    "label": "Easy returns",
+                    "padding-block-start": 0,
+                    "padding-block-end": 0
+                  },
                   "blocks": {}
                 }
               },
-              "block_order": []
+              "block_order": [
+                "badge_secure",
+                "badge_shipping",
+                "badge_returns"
+              ]
+            },
+            "accordion_shipping": {
+              "type": "_info-accordion",
+              "settings": {
+                "heading": "Shipping & Delivery",
+                "content": "<p>Free standard shipping on orders over $75. Expedited and overnight options available at checkout.</p>",
+                "default_open": false,
+                "padding-block-start": 0,
+                "padding-block-end": 0
+              },
+              "blocks": {}
+            },
+            "accordion_returns": {
+              "type": "_info-accordion",
+              "settings": {
+                "heading": "Returns & Exchanges",
+                "content": "<p>We offer a 30-day return policy on all unused items in original packaging. Contact our support team to initiate a return.</p>",
+                "default_open": false,
+                "padding-block-start": 0,
+                "padding-block-end": 0
+              },
+              "blocks": {}
             },
             "text_aEtTtq": {
               "type": "text",
@@ -245,8 +336,14 @@
           "block_order": [
             "group_icgrde",
             "divider_VJhene",
-            "variant_picker_R3rGDr",
-            "buy_buttons_eYQEYi",
+            "premium_variants",
+            "selling_plan",
+            "premium_buy_btns",
+            "free_shipping",
+            "delivery_est",
+            "trust_group",
+            "accordion_shipping",
+            "accordion_returns",
             "text_aEtTtq"
           ]
         },

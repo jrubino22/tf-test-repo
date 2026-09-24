@@ -1,0 +1,110 @@
+{% render 'premium-buy-box-styles' %}
+
+{%- liquid
+  assign icon_type = block.settings.icon | default: 'lock'
+  assign label_text = block.settings.label | default: 'Secure checkout'
+-%}
+
+<div
+  class="pbb-trust-badge spacing-style"
+  style="{% render 'spacing-style', settings: block.settings %}"
+  {{ block.shopify_attributes }}
+>
+  <svg class="pbb-trust-badge__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    {%- case icon_type -%}
+      {%- when 'lock' -%}
+        <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      {%- when 'truck' -%}
+        <path d="M10.5 3H1.5v8h9V3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10.5 6h2.5l2 2.5V11h-4.5V6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="4" cy="12.5" r="1.25" stroke="currentColor" stroke-width="1.25"/>
+        <circle cx="12.5" cy="12.5" r="1.25" stroke="currentColor" stroke-width="1.25"/>
+      {%- when 'refresh' -%}
+        <path d="M1.5 2.5v4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14.5 13.5v-4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12.8 6A5.5 5.5 0 0 0 3.2 4.5L1.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M3.2 10a5.5 5.5 0 0 0 9.6 1.5l1.7-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      {%- when 'shield' -%}
+        <path d="M8 1.5L2 4v4c0 3.5 2.5 5.5 6 7 3.5-1.5 6-3.5 6-7V4L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    {%- endcase -%}
+  </svg>
+  <span class="pbb-trust-badge__label">{{ label_text }}</span>
+</div>
+
+{% stylesheet %}
+  .pbb-trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375em;
+  }
+
+  .pbb-trust-badge__icon {
+    flex-shrink: 0;
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+  }
+
+  .pbb-trust-badge__label {
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+    line-height: 1.4;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Trust badge",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "icon",
+      "label": "Icon",
+      "options": [
+        { "value": "lock", "label": "Lock" },
+        { "value": "truck", "label": "Truck" },
+        { "value": "refresh", "label": "Refresh" },
+        { "value": "shield", "label": "Shield" }
+      ],
+      "default": "lock"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Label",
+      "default": "Secure checkout"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust badge",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

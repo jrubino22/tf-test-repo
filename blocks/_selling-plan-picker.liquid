@@ -1,0 +1,260 @@
+{% render 'premium-buy-box-styles' %}
+
+<script src="{{ 'selling-plan-picker.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+{%- liquid
+  assign product_resource = closest.product
+  if request.visual_preview_mode and product_resource == blank
+    assign product_resource = collections.all.products.first
+  endif
+
+  assign selected_variant = product_resource.selected_or_first_available_variant
+  assign selling_plan_groups = product_resource.selling_plan_groups
+
+  assign has_selling_plans = false
+  if selling_plan_groups.size > 0
+    assign has_selling_plans = true
+  endif
+
+  assign product_form_id = 'PremiumBuyBox-Form-' | append: section.id
+-%}
+
+{%- if has_selling_plans -%}
+  <selling-plan-picker
+    class="pbb-selling-plan spacing-style"
+    style="{% render 'spacing-style', settings: block.settings %}"
+    data-section-id="{{ section.id }}"
+    data-product-url="{{ product_resource.url }}"
+    data-mode="onetime"
+    {{ block.shopify_attributes }}
+  >
+    {%- comment -%} Hidden input associated to the buy-buttons form via form= attribute {%- endcomment -%}
+    <input
+      type="hidden"
+      name="selling_plan"
+      ref="sellingPlanInput"
+      value=""
+      form="{{ product_form_id }}"
+    >
+
+    <div class="pbb-selling-plan__toggle" role="tablist">
+      <button
+        type="button"
+        class="pbb-selling-plan__tab"
+        ref="onetimeTab"
+        role="tab"
+        aria-selected="true"
+        on:click="/handleOnetimeClick"
+      >
+        One-time
+      </button>
+      <button
+        type="button"
+        class="pbb-selling-plan__tab"
+        ref="subscribeTab"
+        role="tab"
+        aria-selected="false"
+        on:click="/handleSubscribeClick"
+      >
+        Subscribe
+        {%- assign first_group = selling_plan_groups.first -%}
+        {%- if first_group.selling_plans.first.price_adjustments.size > 0 -%}
+          <span class="pbb-selling-plan__discount-badge" ref="discountBadge"></span>
+        {%- endif -%}
+      </button>
+      <span class="pbb-selling-plan__indicator" ref="indicator" aria-hidden="true"></span>
+    </div>
+
+    <div class="pbb-selling-plan__plans" ref="planSelector" hidden>
+      {%- for group in selling_plan_groups -%}
+        {%- if group.selling_plans.size > 0 -%}
+          <label class="pbb-selling-plan__plan-label" for="PremiumSellingPlan-{{ section.id }}-{{ group.id }}">
+            {{ group.name | escape }}
+          </label>
+          <div class="pbb-selling-plan__select-wrapper">
+            <select
+              id="PremiumSellingPlan-{{ section.id }}-{{ group.id }}"
+              ref="planSelect"
+              class="pbb-selling-plan__select"
+              on:change="/handlePlanChange"
+            >
+              {%- for plan in group.selling_plans -%}
+                <option
+                  value="{{ plan.id }}"
+                  {% if plan == selected_variant.selected_selling_plan_allocation.selling_plan %}selected{% endif %}
+                >
+                  {{ plan.name | escape }}
+                </option>
+              {%- endfor -%}
+            </select>
+            <svg aria-hidden="true" focusable="false" class="pbb-selling-plan__caret" viewBox="0 0 10 6">
+              {%- render 'icon', icon: 'caret' -%}
+            </svg>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+
+    {%- comment -%} JSON data for JS to read discount info {%- endcomment -%}
+    <script type="application/json" ref="planData">
+      {{- selling_plan_groups.first.selling_plans | json -}}
+    </script>
+  </selling-plan-picker>
+{%- endif -%}
+
+{% stylesheet %}
+  .pbb-selling-plan {
+    display: block;
+  }
+
+  .pbb-selling-plan__toggle {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: rgb(var(--color-foreground-rgb) / 0.05);
+    border-radius: var(--pbb-radius-md);
+    padding: 3px;
+  }
+
+  .pbb-selling-plan__tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: var(--padding-xs) var(--padding-md);
+    border: none;
+    background: transparent;
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: rgb(var(--color-foreground-rgb) / 0.6);
+    cursor: pointer;
+    border-radius: calc(var(--pbb-radius-md) - 2px);
+    transition: color var(--pbb-speed-normal) var(--pbb-easing);
+    white-space: nowrap;
+  }
+
+  .pbb-selling-plan__tab[aria-selected="true"] {
+    color: rgb(var(--color-foreground-rgb));
+  }
+
+  .pbb-selling-plan__indicator {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    height: calc(100% - 6px);
+    background: rgb(var(--color-background-rgb));
+    border-radius: calc(var(--pbb-radius-md) - 2px);
+    box-shadow: var(--pbb-shadow-sm);
+    transition: transform var(--pbb-speed-normal) var(--pbb-easing);
+    pointer-events: none;
+  }
+
+  [data-mode="subscribe"] .pbb-selling-plan__indicator {
+    transform: translateX(100%);
+  }
+
+  .pbb-selling-plan__discount-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: var(--pbb-radius-pill);
+    background: var(--pbb-success);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: var(--font-weight-bold, 700);
+    line-height: 1.4;
+  }
+
+  .pbb-selling-plan__discount-badge:empty {
+    display: none;
+  }
+
+  .pbb-selling-plan__plans {
+    margin-block-start: var(--margin-md);
+  }
+
+  .pbb-selling-plan__plan-label {
+    display: block;
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: rgb(var(--color-foreground-rgb));
+    margin-block-end: var(--margin-xs);
+  }
+
+  .pbb-selling-plan__select-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .pbb-selling-plan__select {
+    appearance: none;
+    width: 100%;
+    padding: var(--padding-sm) var(--padding-xl) var(--padding-sm) var(--padding-md);
+    border: 1px solid rgb(var(--color-foreground-rgb) / 0.15);
+    border-radius: var(--pbb-radius-md);
+    background: transparent;
+    font-size: var(--font-paragraph--size, 1rem);
+    color: rgb(var(--color-foreground-rgb));
+    cursor: pointer;
+  }
+
+  .pbb-selling-plan__select:focus-visible {
+    outline: 2px solid rgb(var(--color-foreground-rgb));
+    outline-offset: 2px;
+  }
+
+  .pbb-selling-plan__caret {
+    position: absolute;
+    inset-inline-end: var(--padding-md);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 6px;
+    pointer-events: none;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Selling plan picker",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Subscribe-and-save toggle. Only shows when the product has selling plans."
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Selling plan picker",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

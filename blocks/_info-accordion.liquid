@@ -1,0 +1,150 @@
+{% render 'premium-buy-box-styles' %}
+
+{%- liquid
+  assign heading_text = block.settings.heading | default: 'Details'
+  assign content_html = block.settings.content
+  assign default_open = block.settings.default_open
+-%}
+
+<details
+  class="pbb-accordion spacing-style"
+  style="{% render 'spacing-style', settings: block.settings %}"
+  {% if default_open %}open{% endif %}
+  {{ block.shopify_attributes }}
+>
+  <summary class="pbb-accordion__header">
+    <span class="pbb-accordion__title">{{ heading_text }}</span>
+    <svg class="pbb-accordion__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </summary>
+  {%- if content_html != blank -%}
+    <div class="pbb-accordion__body">
+      {{ content_html }}
+    </div>
+  {%- endif -%}
+</details>
+
+{% stylesheet %}
+  .pbb-accordion {
+    display: block;
+    border-block-end: 1px solid rgb(var(--color-foreground-rgb) / 0.1);
+  }
+
+  .pbb-accordion__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: var(--padding-sm);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .pbb-accordion__header::-webkit-details-marker {
+    display: none;
+  }
+
+  .pbb-accordion__header::marker {
+    content: '';
+  }
+
+  .pbb-accordion__title {
+    font-size: var(--font-paragraph--size, 1rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: rgb(var(--color-foreground-rgb));
+    line-height: 1.4;
+  }
+
+  .pbb-accordion__chevron {
+    flex-shrink: 0;
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+    transition: transform var(--pbb-speed-normal) var(--pbb-easing);
+  }
+
+  .pbb-accordion[open] > .pbb-accordion__header .pbb-accordion__chevron {
+    transform: rotate(180deg);
+  }
+
+  .pbb-accordion__body {
+    padding-block-end: var(--padding-md);
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+    line-height: 1.6;
+  }
+
+  .pbb-accordion__body p {
+    margin: 0;
+  }
+
+  .pbb-accordion__body p + p {
+    margin-block-start: 0.75em;
+  }
+
+  .pbb-accordion__body ul,
+  .pbb-accordion__body ol {
+    margin: 0.5em 0;
+    padding-inline-start: 1.25em;
+  }
+
+  .pbb-accordion__body li {
+    margin-block-end: 0.25em;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Info accordion",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Details"
+    },
+    {
+      "type": "richtext",
+      "id": "content",
+      "label": "Content",
+      "default": "<p>Add details about your product here.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "default_open",
+      "label": "Open by default",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Info accordion",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

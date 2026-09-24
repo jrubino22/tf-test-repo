@@ -1,0 +1,159 @@
+{% render 'premium-buy-box-styles' %}
+
+<script src="{{ 'delivery-estimate.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+{%- liquid
+  assign min_days = block.settings.min_days | default: 3
+  assign max_days = block.settings.max_days | default: 7
+  assign cutoff_hour = block.settings.cutoff_hour | default: 14
+  assign show_countdown = block.settings.show_countdown
+-%}
+
+<delivery-estimate
+  class="pbb-delivery spacing-style"
+  style="{% render 'spacing-style', settings: block.settings %}"
+  data-min-days="{{ min_days }}"
+  data-max-days="{{ max_days }}"
+  data-cutoff-hour="{{ cutoff_hour }}"
+  data-show-countdown="{{ show_countdown }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="pbb-delivery__container">
+    <div class="pbb-delivery__row">
+      <svg class="pbb-delivery__icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M13 3H1v10h12V3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13 7h3l2.5 3V13h-5.5V7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="4.5" cy="15" r="1.5" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="15.5" cy="15" r="1.5" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <div class="pbb-delivery__text">
+        <span class="pbb-delivery__label">Estimated delivery</span>
+        <span class="pbb-delivery__dates" ref="dateRange">Calculating…</span>
+      </div>
+    </div>
+
+    {%- if show_countdown -%}
+      <p class="pbb-delivery__countdown" ref="countdown" hidden></p>
+    {%- endif -%}
+  </div>
+</delivery-estimate>
+
+{% stylesheet %}
+  .pbb-delivery {
+    display: block;
+  }
+
+  .pbb-delivery__container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2xs);
+  }
+
+  .pbb-delivery__row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-sm);
+  }
+
+  .pbb-delivery__icon {
+    flex-shrink: 0;
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+    margin-block-start: 1px;
+  }
+
+  .pbb-delivery__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pbb-delivery__label {
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+  }
+
+  .pbb-delivery__dates {
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: rgb(var(--color-foreground-rgb));
+  }
+
+  .pbb-delivery__countdown {
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: var(--pbb-accent);
+    font-weight: var(--font-weight-semibold, 600);
+    margin: 0;
+    padding-inline-start: calc(20px + var(--gap-sm));
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Delivery estimate",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows estimated delivery dates calculated from business days."
+    },
+    {
+      "type": "header",
+      "content": "Configuration"
+    },
+    {
+      "type": "number",
+      "id": "min_days",
+      "label": "Minimum business days",
+      "default": 3
+    },
+    {
+      "type": "number",
+      "id": "max_days",
+      "label": "Maximum business days",
+      "default": 7
+    },
+    {
+      "type": "number",
+      "id": "cutoff_hour",
+      "label": "Same-day cutoff hour (24h)",
+      "default": 14
+    },
+    {
+      "type": "checkbox",
+      "id": "show_countdown",
+      "label": "Show order countdown",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Delivery estimate",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

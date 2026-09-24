@@ -22,6 +22,7 @@
   {% content_for 'blocks' %}
 {% endcapture %}
 
+{% render 'premium-buy-box-styles' %}
 {% render 'deferred-media-product-model-styles' %}
 {% render 'deferred-media-video-styles' %}
 
@@ -36,6 +37,7 @@
 
   <sticky-add-to-cart
     class="sticky-add-to-cart"
+    data-desktop-sticky="{{ section.settings.show_sticky_desktop }}"
     data-variant-available="{{ current_variant.available }}"
     data-product-id="{{ product.id }}"
     data-current-variant-id="{{ current_variant.id }}"
@@ -289,6 +291,13 @@
     position: relative;
   }
 
+  /* Hide sticky bar on desktop when disabled */
+  @media screen and (min-width: 750px) {
+    sticky-add-to-cart[data-desktop-sticky="false"] .sticky-add-to-cart__bar {
+      display: none;
+    }
+  }
+
   /* Mobile adjustments */
   @media screen and (max-width: 749px) {
     .sticky-add-to-cart__bar {
@@ -449,6 +458,13 @@
       "id": "enable_sticky_add_to_cart",
       "label": "t:settings.enable_sticky_add_to_cart",
       "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sticky_desktop",
+      "label": "Show sticky bar on desktop",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_sticky_add_to_cart }}"
     },
     {
       "type": "color",

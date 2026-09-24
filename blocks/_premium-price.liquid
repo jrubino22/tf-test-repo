@@ -1,0 +1,214 @@
+{% render 'premium-buy-box-styles' %}
+
+<script src="{{ 'premium-price.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+{%- liquid
+  assign product_resource = closest.product
+  if request.visual_preview_mode and product_resource == blank
+    assign product_resource = collections.all.products.first
+  endif
+
+  assign selected_variant = product_resource.selected_or_first_available_variant
+  assign price = selected_variant.price
+  assign compare_at_price = selected_variant.compare_at_price
+
+  assign show_compare_price = false
+  if compare_at_price > price
+    assign show_compare_price = true
+  endif
+
+  assign use_currency = false
+  if settings.currency_code_enabled_product_pages
+    assign use_currency = true
+  endif
+
+  if use_currency
+    assign formatted_price = price | money_with_currency
+    assign formatted_compare = compare_at_price | money_with_currency
+  else
+    assign formatted_price = price | money
+    assign formatted_compare = compare_at_price | money
+  endif
+
+  assign savings_amount = 0
+  assign savings_percent = 0
+  if show_compare_price
+    assign savings_amount = compare_at_price | minus: price
+    assign savings_percent = savings_amount | times: 100 | divided_by: compare_at_price
+    if use_currency
+      assign formatted_savings = savings_amount | money_with_currency
+    else
+      assign formatted_savings = savings_amount | money
+    endif
+  endif
+
+  assign show_unit_price = false
+  if selected_variant.unit_price and block.settings.show_unit_price
+    assign show_unit_price = true
+  endif
+-%}
+
+<premium-price-display
+  class="pbb-price spacing-style"
+  style="{% render 'spacing-style', settings: block.settings %}"
+  data-has-compare-at="{{ show_compare_price }}"
+  data-price-cents="{{ price }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="pbb-price__container pbb-price--{{ block.settings.alignment }}">
+    <div class="pbb-price__main">
+      <span class="pbb-price__current" ref="priceValue">
+        {{- formatted_price -}}
+      </span>
+
+      {%- if show_compare_price -%}
+        <span class="pbb-price__compare">
+          <s>{{ formatted_compare }}</s>
+        </span>
+      {%- endif -%}
+    </div>
+
+    {%- if show_compare_price and block.settings.show_savings_badge -%}
+      <span class="pbb-price__savings-badge" ref="savingsBadge">
+        Save {{ formatted_savings }} ({{ savings_percent }}%)
+      </span>
+    {%- endif -%}
+
+    {%- if show_unit_price -%}
+      <div class="pbb-price__unit">
+        {{ selected_variant.unit_price | money }}
+        /
+        {%- if selected_variant.unit_price_measurement.reference_value != 1 -%}
+          {{ selected_variant.unit_price_measurement.reference_value }}
+        {%- endif -%}
+        {{ selected_variant.unit_price_measurement.reference_unit }}
+      </div>
+    {%- endif -%}
+  </div>
+</premium-price-display>
+
+{% stylesheet %}
+  .pbb-price__container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2xs);
+  }
+
+  .pbb-price--left { align-items: flex-start; }
+  .pbb-price--center { align-items: center; }
+  .pbb-price--right { align-items: flex-end; }
+
+  .pbb-price__main {
+    display: flex;
+    align-items: baseline;
+    gap: var(--gap-sm);
+    flex-wrap: wrap;
+  }
+
+  .pbb-price__current {
+    font-size: var(--font-h4--size, 1.5rem);
+    font-weight: var(--font-weight-semibold, 600);
+    line-height: var(--font-h4--line-height, 1.2);
+    color: rgb(var(--color-foreground-rgb));
+  }
+
+  .pbb-price__compare {
+    font-size: var(--font-paragraph--size, 1rem);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+  }
+
+  .pbb-price__compare s {
+    text-decoration: line-through;
+  }
+
+  .pbb-price__savings-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--pbb-radius-pill);
+    background: var(--pbb-success);
+    color: #fff;
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    font-weight: var(--font-weight-semibold, 600);
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .pbb-price__unit {
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Premium price",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Displays product price with animated transitions and savings badge."
+    },
+    {
+      "type": "header",
+      "content": "Display"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_savings_badge",
+      "label": "Show savings badge",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_unit_price",
+      "label": "Show unit price",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Premium price"
+    }
+  ]
+}
+{% endschema %}

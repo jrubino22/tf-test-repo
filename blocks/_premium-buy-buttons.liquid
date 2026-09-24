@@ -1,0 +1,384 @@
+{% render 'premium-buy-box-styles' %}
+
+<script src="{{ 'premium-buy-buttons.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+{%- liquid
+  assign product_resource = closest.product
+  if request.visual_preview_mode and product_resource == blank
+    assign product_resource = collections.all.products.first
+  endif
+
+  assign selected_variant = product_resource.selected_or_first_available_variant
+
+  assign can_add_to_cart = false
+  assign add_to_cart_text = 'Unavailable'
+
+  if selected_variant
+    assign quantity_rule_soldout = false
+    if selected_variant.quantity_rule.min > selected_variant.inventory_quantity and selected_variant.inventory_management == 'shopify' and selected_variant.inventory_policy == 'deny'
+      assign quantity_rule_soldout = true
+    endif
+
+    if selected_variant.available
+      assign can_add_to_cart = true
+      assign add_to_cart_text = block.settings.button_text | default: 'Add to cart'
+    elsif selected_variant.inventory_management == 'shopify' and selected_variant.inventory_quantity <= 0 and selected_variant.inventory_policy == 'deny' or quantity_rule_soldout
+      assign add_to_cart_text = 'Sold out'
+    endif
+  endif
+
+  assign product_form_id = 'PremiumBuyBox-Form-' | append: section.id
+
+  assign qty_min = selected_variant.quantity_rule.min | default: 1
+  assign qty_max = selected_variant.quantity_rule.max
+  assign qty_step = selected_variant.quantity_rule.increment | default: 1
+-%}
+
+<premium-buy-buttons
+  class="pbb-buy spacing-style"
+  style="{% render 'spacing-style', settings: block.settings %}"
+  data-quantity-min="{{ qty_min }}"
+  {% if qty_max %}data-quantity-max="{{ qty_max }}"{% endif %}
+  data-quantity-step="{{ qty_step }}"
+  {{ block.shopify_attributes }}
+>
+  {%- if product_resource != blank -%}
+    {%- form 'product', product_resource, id: product_form_id, data-type: 'add-to-cart-form' -%}
+      <input type="hidden" name="id" ref="variantId" value="{{ selected_variant.id }}">
+
+      <div class="pbb-buy__actions pbb-buy--{{ block.settings.alignment }}">
+        {%- if block.settings.show_quantity -%}
+          <div class="pbb-buy__quantity">
+            <label class="pbb-buy__quantity-label" for="PremiumQuantity-{{ section.id }}">
+              Quantity
+            </label>
+            <div class="pbb-buy__stepper">
+              <button
+                type="button"
+                class="pbb-buy__stepper-btn"
+                ref="decrementBtn"
+                on:click="/handleDecrement"
+                aria-label="Decrease quantity"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <input
+                type="number"
+                id="PremiumQuantity-{{ section.id }}"
+                name="quantity"
+                ref="quantityInput"
+                class="pbb-buy__quantity-input"
+                value="{{ qty_min }}"
+                min="{{ qty_min }}"
+                {% if qty_max %}max="{{ qty_max }}"{% endif %}
+                step="{{ qty_step }}"
+                on:change="/handleQuantityChange"
+                aria-label="Quantity"
+              >
+              <button
+                type="button"
+                class="pbb-buy__stepper-btn"
+                ref="incrementBtn"
+                on:click="/handleIncrement"
+                aria-label="Increase quantity"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        {%- endif -%}
+
+        <button
+          type="submit"
+          name="add"
+          ref="addToCartBtn"
+          class="pbb-buy__atc-btn"
+          data-state="idle"
+          {% unless can_add_to_cart %}disabled{% endunless %}
+          on:click="/handleAddToCart"
+        >
+          <span class="pbb-buy__atc-text" data-label="idle">{{ add_to_cart_text }}</span>
+          <span class="pbb-buy__atc-text" data-label="loading" aria-hidden="true">
+            <svg class="pbb-buy__spinner" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="40 10" />
+            </svg>
+            Adding…
+          </span>
+          <span class="pbb-buy__atc-text" data-label="success" aria-hidden="true">
+            <svg class="pbb-buy__checkmark" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Added!
+          </span>
+          <span class="pbb-buy__atc-text" data-label="error" aria-hidden="true">Try again</span>
+        </button>
+
+        <p class="pbb-buy__error" ref="errorMessage" hidden></p>
+
+        {%- if block.settings.show_dynamic_checkout and can_add_to_cart -%}
+          <div class="pbb-buy__dynamic-checkout">
+            {{ form | payment_button }}
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endform -%}
+  {%- else -%}
+    <div class="pbb-buy__actions">
+      <button type="submit" name="add" class="pbb-buy__atc-btn" disabled>
+        Unavailable
+      </button>
+    </div>
+  {%- endif -%}
+</premium-buy-buttons>
+
+{% stylesheet %}
+  .pbb-buy__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+  }
+
+  .pbb-buy--left { align-items: flex-start; }
+  .pbb-buy--center { align-items: center; }
+  .pbb-buy--right { align-items: flex-end; }
+
+  /* Quantity stepper */
+  .pbb-buy__quantity-label {
+    display: block;
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: rgb(var(--color-foreground-rgb));
+    margin-block-end: var(--margin-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .pbb-buy__stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgb(var(--color-foreground-rgb) / 0.15);
+    border-radius: var(--pbb-radius-md);
+    overflow: hidden;
+  }
+
+  .pbb-buy__stepper-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    color: rgb(var(--color-foreground-rgb));
+    cursor: pointer;
+    transition: background-color var(--pbb-speed-fast) var(--pbb-easing);
+  }
+
+  .pbb-buy__stepper-btn:hover {
+    background: rgb(var(--color-foreground-rgb) / 0.05);
+  }
+
+  .pbb-buy__stepper-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .pbb-buy__stepper-btn:disabled:hover {
+    background: transparent;
+  }
+
+  .pbb-buy__quantity-input {
+    width: 48px;
+    height: 44px;
+    border: none;
+    border-inline: 1px solid rgb(var(--color-foreground-rgb) / 0.15);
+    background: transparent;
+    text-align: center;
+    font-size: var(--font-paragraph--size, 1rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: rgb(var(--color-foreground-rgb));
+    -moz-appearance: textfield;
+  }
+
+  .pbb-buy__quantity-input::-webkit-inner-spin-button,
+  .pbb-buy__quantity-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Add-to-cart button */
+  .pbb-buy__atc-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: var(--height-buy-buttons, 48px);
+    padding: var(--padding-sm) var(--padding-xl);
+    border: none;
+    border-radius: var(--style-border-radius-buttons-primary, var(--pbb-radius-md));
+    background: rgb(var(--color-primary-button-background-rgb, var(--color-foreground-rgb)));
+    color: rgb(var(--color-primary-button-text-rgb, var(--color-background-rgb)));
+    font-size: var(--font-paragraph--size, 1rem);
+    font-weight: var(--font-weight-semibold, 600);
+    line-height: 1.2;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color var(--pbb-speed-normal) var(--pbb-easing),
+                transform var(--pbb-speed-fast) var(--pbb-easing);
+  }
+
+  .pbb-buy__atc-btn:hover:not(:disabled) {
+    background: rgb(var(--color-primary-button-hover-background-rgb, var(--color-foreground-rgb)));
+  }
+
+  .pbb-buy__atc-btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .pbb-buy__atc-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .pbb-buy__atc-btn:focus-visible {
+    outline: 2px solid rgb(var(--color-foreground-rgb));
+    outline-offset: 2px;
+  }
+
+  /* Button state transitions */
+  .pbb-buy__atc-text {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+  }
+
+  .pbb-buy__atc-btn[data-state="idle"] .pbb-buy__atc-text[data-label="idle"] {
+    display: inline-flex;
+  }
+
+  .pbb-buy__atc-btn[data-state="loading"] .pbb-buy__atc-text[data-label="loading"] {
+    display: inline-flex;
+  }
+
+  .pbb-buy__atc-btn[data-state="success"] .pbb-buy__atc-text[data-label="success"] {
+    display: inline-flex;
+  }
+
+  .pbb-buy__atc-btn[data-state="error"] .pbb-buy__atc-text[data-label="error"] {
+    display: inline-flex;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-buy__spinner {
+      animation: pbb-spinner 0.8s linear infinite;
+    }
+
+    .pbb-buy__atc-btn[data-state="success"] .pbb-buy__checkmark path {
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: pbb-checkmark-draw 0.4s var(--pbb-easing) forwards;
+    }
+  }
+
+  /* Error message */
+  .pbb-buy__error {
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: var(--pbb-error);
+    margin: 0;
+  }
+
+  /* Dynamic checkout buttons */
+  .pbb-buy__dynamic-checkout {
+    width: 100%;
+  }
+
+  .pbb-buy__dynamic-checkout .shopify-payment-button {
+    margin: 0;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Premium buy buttons",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Animated add-to-cart with quantity stepper and dynamic checkout."
+    },
+    {
+      "type": "header",
+      "content": "Display"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Add to cart"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quantity",
+      "label": "Show quantity selector",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dynamic_checkout",
+      "label": "Show dynamic checkout",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Premium buy buttons",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

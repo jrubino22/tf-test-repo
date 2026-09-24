@@ -1,0 +1,92 @@
+{% comment %}
+  Premium Buy Box — shared CSS custom properties and keyframes.
+  Rendered once per section by the first premium block that needs it.
+{% endcomment %}
+
+<style>
+  :root {
+    /* Surface tokens */
+    --pbb-surface: rgb(var(--color-background-rgb, 255 255 255));
+    --pbb-surface-elevated: rgb(var(--color-background-rgb, 255 255 255) / 0.97);
+    --pbb-border: rgb(var(--color-foreground-rgb) / 0.08);
+    --pbb-border-strong: rgb(var(--color-foreground-rgb) / 0.15);
+
+    /* Radius */
+    --pbb-radius-sm: 6px;
+    --pbb-radius-md: 10px;
+    --pbb-radius-lg: 14px;
+    --pbb-radius-pill: 999px;
+
+    /* Shadows */
+    --pbb-shadow-sm: 0 1px 3px rgb(var(--color-foreground-rgb) / 0.04);
+    --pbb-shadow-md: 0 2px 8px rgb(var(--color-foreground-rgb) / 0.06), 0 1px 2px rgb(var(--color-foreground-rgb) / 0.04);
+    --pbb-shadow-lg: 0 4px 20px rgb(var(--color-foreground-rgb) / 0.08), 0 2px 6px rgb(var(--color-foreground-rgb) / 0.04);
+
+    /* Animation tokens */
+    --pbb-speed-fast: 0.15s;
+    --pbb-speed: 0.25s;
+    --pbb-speed-slow: 0.4s;
+    --pbb-easing: cubic-bezier(0.22, 1, 0.36, 1);
+    --pbb-easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Accent */
+    --pbb-accent: rgb(var(--color-primary-button-background-rgb, 0 0 0));
+    --pbb-accent-text: rgb(var(--color-primary-button-text-rgb, 255 255 255));
+    --pbb-success: #16a34a;
+    --pbb-warning: #d97706;
+    --pbb-error: #dc2626;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes pbb-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pbb-slide-up {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pbb-scale-pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pbb-shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes pbb-number-roll {
+      0% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pbb-spinner {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pbb-checkmark-draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes pbb-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  }
+</style>
