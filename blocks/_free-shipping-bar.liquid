@@ -103,7 +103,12 @@
     width: calc(var(--pbb-shipping-progress, 0) * 100%);
     background: var(--pbb-success);
     border-radius: var(--pbb-radius-pill);
-    transition: width var(--pbb-speed-slow) var(--pbb-easing);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-shipping__fill {
+      transition: width var(--pbb-speed-slow) var(--pbb-easing);
+    }
   }
 
   .pbb-shipping__text {
@@ -139,7 +144,7 @@
       "type": "number",
       "id": "threshold",
       "label": "Free shipping threshold",
-      "default": 75
+      "default": 0
     },
     {
       "type": "header",

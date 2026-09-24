@@ -19,8 +19,10 @@
     </svg>
   </summary>
   {%- if content_html != blank -%}
-    <div class="pbb-accordion__body">
-      {{ content_html }}
+    <div class="pbb-accordion__content-wrapper">
+      <div class="pbb-accordion__body">
+        {{ content_html }}
+      </div>
     </div>
   {%- endif -%}
 </details>
@@ -59,14 +61,36 @@
   .pbb-accordion__chevron {
     flex-shrink: 0;
     color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
-    transition: transform var(--pbb-speed-normal) var(--pbb-easing);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-accordion__chevron {
+      transition: transform var(--pbb-speed-normal) var(--pbb-easing);
+    }
   }
 
   .pbb-accordion[open] > .pbb-accordion__header .pbb-accordion__chevron {
     transform: rotate(180deg);
   }
 
+  /* Smooth expand/collapse via grid-template-rows */
+  .pbb-accordion__content-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+  }
+
+  .pbb-accordion[open] > .pbb-accordion__content-wrapper {
+    grid-template-rows: 1fr;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-accordion__content-wrapper {
+      transition: grid-template-rows var(--pbb-speed-normal) var(--pbb-easing);
+    }
+  }
+
   .pbb-accordion__body {
+    overflow: hidden;
     padding-block-end: var(--padding-md);
     font-size: var(--font-paragraph-small--size, 0.8125rem);
     color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));

@@ -175,7 +175,12 @@
     background: transparent;
     color: rgb(var(--color-foreground-rgb));
     cursor: pointer;
-    transition: background-color var(--pbb-speed-fast) var(--pbb-easing);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-buy__stepper-btn {
+      transition: background-color var(--pbb-speed-fast) var(--pbb-easing);
+    }
   }
 
   .pbb-buy__stepper-btn:hover {
@@ -228,8 +233,13 @@
     line-height: 1.2;
     cursor: pointer;
     overflow: hidden;
-    transition: background-color var(--pbb-speed-normal) var(--pbb-easing),
-                transform var(--pbb-speed-fast) var(--pbb-easing);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-buy__atc-btn {
+      transition: background-color var(--pbb-speed-normal) var(--pbb-easing),
+                  transform var(--pbb-speed-fast) var(--pbb-easing);
+    }
   }
 
   .pbb-buy__atc-btn:hover:not(:disabled) {
@@ -333,6 +343,16 @@
       "id": "show_dynamic_checkout",
       "label": "Show dynamic checkout",
       "default": true
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "Button style",
+      "options": [
+        { "value": "filled", "label": "Filled" },
+        { "value": "outline", "label": "Outline" }
+      ],
+      "default": "filled"
     },
     {
       "type": "header",

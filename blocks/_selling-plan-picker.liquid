@@ -131,8 +131,13 @@
     color: rgb(var(--color-foreground-rgb) / 0.6);
     cursor: pointer;
     border-radius: calc(var(--pbb-radius-md) - 2px);
-    transition: color var(--pbb-speed-normal) var(--pbb-easing);
     white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-selling-plan__tab {
+      transition: color var(--pbb-speed-normal) var(--pbb-easing);
+    }
   }
 
   .pbb-selling-plan__tab[aria-selected="true"] {
@@ -148,8 +153,13 @@
     background: rgb(var(--color-background-rgb));
     border-radius: calc(var(--pbb-radius-md) - 2px);
     box-shadow: var(--pbb-shadow-sm);
-    transition: transform var(--pbb-speed-normal) var(--pbb-easing);
     pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-selling-plan__indicator {
+      transition: transform var(--pbb-speed-normal) var(--pbb-easing);
+    }
   }
 
   [data-mode="subscribe"] .pbb-selling-plan__indicator {

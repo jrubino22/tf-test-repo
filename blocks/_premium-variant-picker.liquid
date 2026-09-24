@@ -257,8 +257,13 @@
     line-height: 1.4;
     color: rgb(var(--color-foreground-rgb));
     background: transparent;
-    transition: border-color var(--pbb-speed-fast) var(--pbb-easing),
-                background-color var(--pbb-speed-fast) var(--pbb-easing);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-variants__pill-text {
+      transition: border-color var(--pbb-speed-fast) var(--pbb-easing),
+                  background-color var(--pbb-speed-fast) var(--pbb-easing);
+    }
   }
 
   .pbb-variants__label input[type="radio"]:checked ~ .pbb-variants__pill-text {
