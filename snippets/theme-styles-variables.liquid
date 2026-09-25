@@ -42,6 +42,16 @@
     assign accent_font_italic_face_id = '[accent_font_italic_family]-[accent_font_italic_weight]-[accent_font_italic_style]|' | replace: '[accent_font_italic_family]', accent_font_italic.family | replace: '[accent_font_italic_weight]', accent_font_italic.weight | replace: '[accent_font_italic_style]', accent_font_italic.style
     assign accent_font_bold_italic_face_id = '[accent_font_bold_italic_family]-[accent_font_bold_italic_weight]-[accent_font_bold_italic_style]|' | replace: '[accent_font_bold_italic_family]', accent_font_bold_italic.family | replace: '[accent_font_bold_italic_weight]', accent_font_bold_italic.weight | replace: '[accent_font_bold_italic_style]', accent_font_bold_italic.style
 
+    assign mono_font = settings.type_mono_font
+    assign mono_font_bold = mono_font | font_modify: 'weight', 'bold'
+    assign mono_font_italic = mono_font | font_modify: 'style', 'italic'
+    assign mono_font_bold_italic = mono_font_bold | font_modify: 'style', 'italic'
+
+    assign mono_font_face_id = '[mono_font_family]-[mono_font_weight]-[mono_font_style]|' | replace: '[mono_font_family]', mono_font.family | replace: '[mono_font_weight]', mono_font.weight | replace: '[mono_font_style]', mono_font.style
+    assign mono_font_bold_face_id = '[mono_font_bold_family]-[mono_font_bold_weight]-[mono_font_bold_style]|' | replace: '[mono_font_bold_family]', mono_font_bold.family | replace: '[mono_font_bold_weight]', mono_font_bold.weight | replace: '[mono_font_bold_style]', mono_font_bold.style
+    assign mono_font_italic_face_id = '[mono_font_italic_family]-[mono_font_italic_weight]-[mono_font_italic_style]|' | replace: '[mono_font_italic_family]', mono_font_italic.family | replace: '[mono_font_italic_weight]', mono_font_italic.weight | replace: '[mono_font_italic_style]', mono_font_italic.style
+    assign mono_font_bold_italic_face_id = '[mono_font_bold_italic_family]-[mono_font_bold_italic_weight]-[mono_font_bold_italic_style]|' | replace: '[mono_font_bold_italic_family]', mono_font_bold_italic.family | replace: '[mono_font_bold_italic_weight]', mono_font_bold_italic.weight | replace: '[mono_font_bold_italic_style]', mono_font_bold_italic.style
+
     unless rendered_fonts contains primary_font_face_id
       echo primary_font | font_face: font_display: 'swap'
       assign rendered_fonts = rendered_fonts | append: primary_font_face_id
@@ -121,6 +131,26 @@
       echo accent_font_bold_italic | font_face: font_display: 'swap'
       assign rendered_fonts = rendered_fonts | append: accent_font_bold_italic_face_id
     endunless
+
+    unless rendered_fonts contains mono_font_face_id
+      echo mono_font | font_face: font_display: 'swap'
+      assign rendered_fonts = rendered_fonts | append: mono_font_face_id
+    endunless
+
+    unless rendered_fonts contains mono_font_bold_face_id
+      echo mono_font_bold | font_face: font_display: 'swap'
+      assign rendered_fonts = rendered_fonts | append: mono_font_bold_face_id
+    endunless
+
+    unless rendered_fonts contains mono_font_italic_face_id
+      echo mono_font_italic | font_face: font_display: 'swap'
+      assign rendered_fonts = rendered_fonts | append: mono_font_italic_face_id
+    endunless
+
+    unless rendered_fonts contains mono_font_bold_italic_face_id
+      echo mono_font_bold_italic | font_face: font_display: 'swap'
+      assign rendered_fonts = rendered_fonts | append: mono_font_bold_italic_face_id
+    endunless
   %}
 
   :root {
@@ -172,6 +202,9 @@
     --font-accent--family: {{ settings.type_accent_font.family }}, {{ settings.type_accent_font.fallback_families }};
     --font-accent--style: {{ settings.type_accent_font.style }};
     --font-accent--weight: {{ settings.type_accent_font.weight }};
+    --font-mono--family: {{ settings.type_mono_font.family }}, {{ settings.type_mono_font.fallback_families }};
+    --font-mono--style: {{ settings.type_mono_font.style }};
+    --font-mono--weight: {{ settings.type_mono_font.weight }};
 
     /* Margin sizes */
     --font-heading--spacing: 0.25em;

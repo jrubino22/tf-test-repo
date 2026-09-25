@@ -4,6 +4,12 @@
   assign block_settings = block.settings
   assign product_resource = closest.product
   assign selected_variant = product_resource.selected_or_first_available_variant
+
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
 -%}
 
 {% liquid
@@ -36,57 +42,76 @@
   endcapture
 %}
 
-<product-price
-  class="text-block {{ text_block_classes }} text-{{ block_settings.alignment }} {{ block_settings.type_preset | default: 'paragraph' }} spacing-style"
-  data-block-id="{{ block.id }}"
-  data-product-id="{{ product_resource.id }}"
-  style="
-    {% render 'typography-style', settings: block_settings %}
-    {% render 'spacing-style', settings: block_settings %}
-    {% if block_settings.text_color != blank %}
-      --color: {{ block_settings.text_color }};
-      --color-rgb: {{ block_settings.text_color.rgb }};
+{%- if in_receipt -%}
+  <div class="receipt-line-item" data-reprint {{ block.shopify_attributes }}>
+    {%- if selected_variant != blank -%}
+      {% render 'receipt-line', label: 'SUBTOTAL', value: selected_variant.price | money %}
+
+      {%- if selected_variant.compare_at_price > selected_variant.price -%}
+        {%- assign savings = selected_variant.compare_at_price | minus: selected_variant.price -%}
+        <div class="receipt-price__savings-row">
+          {% render 'receipt-line', label: 'YOU SAVE', value: savings | money %}
+          {%- assign savings_pct_raw = savings | times: 100 | divided_by: selected_variant.compare_at_price -%}
+          {% render 'receipt-stamp', text: savings_pct_raw | append: '% OFF', type: 'savings' %}
+        </div>
+      {%- endif -%}
+    {%- else -%}
+      {% render 'receipt-line', label: 'SUBTOTAL', value: '—' %}
+    {%- endif -%}
+  </div>
+{%- else -%}
+  <product-price
+    class="text-block {{ text_block_classes }} text-{{ block_settings.alignment }} {{ block_settings.type_preset | default: 'paragraph' }} spacing-style"
+    data-block-id="{{ block.id }}"
+    data-product-id="{{ product_resource.id }}"
+    style="
+      {% render 'typography-style', settings: block_settings %}
+      {% render 'spacing-style', settings: block_settings %}
+      {% if block_settings.text_color != blank %}
+        --color: {{ block_settings.text_color }};
+        --color-rgb: {{ block_settings.text_color.rgb }};
+      {% endif %}
+      --width: {{ block_settings.width }};
+    "
+    {{ block.shopify_attributes }}
+  >
+    {% render 'price',
+      show_unit_price: true,
+      product_resource: product_resource,
+      show_sale_price_first: block_settings.show_sale_price_first
+    %}
+
+    {% if block_settings.show_tax_info %}
+      <div class="tax-note">
+        {%- if cart.duties_included and cart.taxes_included -%}
+          {{ 'content.duties_and_taxes_included' | t }}
+        {%- elsif cart.taxes_included -%}
+          {{ 'content.taxes_included' | t }}
+        {%- elsif cart.duties_included -%}
+          {{ 'content.duties_included' | t }}
+        {%- endif -%}
+
+        {%- if shop.shipping_policy.body != blank -%}
+          {{ 'content.shipping_policy' | t }}
+        {%- endif -%}
+      </div>
     {% endif %}
-    --width: {{ block_settings.width }};
-  "
-  {{ block.shopify_attributes }}
->
-  {% render 'price',
-    show_unit_price: true,
-    product_resource: product_resource,
-    show_sale_price_first: block_settings.show_sale_price_first
-  %}
 
-  {% if block_settings.show_tax_info %}
-    <div class="tax-note">
-      {%- if cart.duties_included and cart.taxes_included -%}
-        {{ 'content.duties_and_taxes_included' | t }}
-      {%- elsif cart.taxes_included -%}
-        {{ 'content.taxes_included' | t }}
-      {%- elsif cart.duties_included -%}
-        {{ 'content.duties_included' | t }}
-      {%- endif -%}
-
-      {%- if shop.shipping_policy.body != blank -%}
-        {{ 'content.shipping_policy' | t }}
-      {%- endif -%}
-    </div>
-  {% endif %}
-
-  {%- if selected_variant != blank and block_settings.show_installments -%}
-    <div class="installments">
-      {%- assign product_form_installment_id = 'product-form-installment-' | append: block.id -%}
-      {%- form 'product', product_resource, id: product_form_installment_id, class: 'payment-terms' -%}
-        <input
-          type="hidden"
-          name="id"
-          value="{{ selected_variant.id }}"
-        >
-        {{ form | payment_terms }}
-      {%- endform -%}
-    </div>
-  {%- endif -%}
-</product-price>
+    {%- if selected_variant != blank and block_settings.show_installments -%}
+      <div class="installments">
+        {%- assign product_form_installment_id = 'product-form-installment-' | append: block.id -%}
+        {%- form 'product', product_resource, id: product_form_installment_id, class: 'payment-terms' -%}
+          <input
+            type="hidden"
+            name="id"
+            value="{{ selected_variant.id }}"
+          >
+          {{ form | payment_terms }}
+        {%- endform -%}
+      </div>
+    {%- endif -%}
+  </product-price>
+{%- endif -%}
 
 {% render 'payment-terms-styles' %}
 

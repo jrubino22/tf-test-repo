@@ -17,9 +17,19 @@
   endif
 
   assign product_form_id = 'PremiumBuyBox-Form-' | append: section.id
+
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
 -%}
 
 {%- if has_selling_plans -%}
+  {%- if in_receipt -%}
+    <div class="receipt-line-item" data-reprint>
+      {% render 'receipt-line', label: 'PURCHASE TYPE', value: '', bold: true %}
+  {%- endif -%}
   <selling-plan-picker
     class="pbb-selling-plan spacing-style"
     style="{% render 'spacing-style', settings: block.settings %}"
@@ -100,6 +110,9 @@
       {{- selling_plan_groups.first.selling_plans | json -}}
     </script>
   </selling-plan-picker>
+  {%- if in_receipt -%}
+    </div>
+  {%- endif -%}
 {%- endif -%}
 
 {% stylesheet %}
@@ -223,6 +236,52 @@
     width: 10px;
     height: 6px;
     pointer-events: none;
+  }
+
+  /* Receipt mode overrides */
+  receipt-container .pbb-selling-plan__toggle {
+    background: transparent;
+    border: 1px dashed var(--receipt-ink-faded);
+    border-radius: 0;
+    padding: 2px;
+  }
+
+  receipt-container .pbb-selling-plan__tab {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink-light);
+    border-radius: 0;
+  }
+
+  receipt-container .pbb-selling-plan__tab[aria-selected="true"] {
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .pbb-selling-plan__indicator {
+    background: var(--receipt-paper);
+    border-radius: 0;
+    box-shadow: none;
+    border: 1px solid var(--receipt-ink-faded);
+  }
+
+  receipt-container .pbb-selling-plan__discount-badge {
+    font-family: var(--receipt-mono);
+    border-radius: 0;
+    background: var(--receipt-accent);
+  }
+
+  receipt-container .pbb-selling-plan__plan-label,
+  receipt-container .pbb-selling-plan__select {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .pbb-selling-plan__select {
+    border-color: var(--receipt-ink-faded);
+    border-radius: 0;
   }
 {% endstylesheet %}
 

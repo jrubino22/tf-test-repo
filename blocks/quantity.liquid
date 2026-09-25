@@ -1,17 +1,51 @@
-{%- if block.settings.input_style == 'custom' -%}
-  {%- capture wrapper_class -%}quantity-selector-wrapper--block-{{ block.id }}{%- endcapture -%}
-  {% style %}
-    .{{ wrapper_class }} {
-      {%- render 'input-custom-styles', block_settings: block.settings -%}
-      --style-border-width-inputs: {{ block.settings.border_width }}px;
-      --style-border-radius-inputs: {{ block.settings.border_radius }}px;
-      --style-border-radius-buttons-primary: {{ block.settings.border_radius }}px;
-      --style-border-radius-buttons-secondary: {{ block.settings.border_radius }}px;
-    }
-  {% endstyle %}
+{%- liquid
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
+-%}
+
+{%- if in_receipt -%}
+  <div class="receipt-line-item" data-reprint {{ block.shopify_attributes }}>
+    {% render 'receipt-line', label: 'QTY', value: '', bold: true %}
+    {% render 'quantity-selector', product: closest.product, block: block %}
+  </div>
+{%- else -%}
+  {%- if block.settings.input_style == 'custom' -%}
+    {%- capture wrapper_class -%}quantity-selector-wrapper--block-{{ block.id }}{%- endcapture -%}
+    {% style %}
+      .{{ wrapper_class }} {
+        {%- render 'input-custom-styles', block_settings: block.settings -%}
+        --style-border-width-inputs: {{ block.settings.border_width }}px;
+        --style-border-radius-inputs: {{ block.settings.border_radius }}px;
+        --style-border-radius-buttons-primary: {{ block.settings.border_radius }}px;
+        --style-border-radius-buttons-secondary: {{ block.settings.border_radius }}px;
+      }
+    {% endstyle %}
+  {%- endif -%}
+
+  {% render 'quantity-selector', product: closest.product, block: block, wrapper_class: wrapper_class %}
 {%- endif -%}
 
-{% render 'quantity-selector', product: closest.product, block: block, wrapper_class: wrapper_class %}
+{% stylesheet %}
+  receipt-container .quantity-selector {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+  }
+
+  receipt-container .quantity-selector input {
+    font-family: var(--receipt-mono);
+    background: transparent;
+    border-color: var(--receipt-ink-faded);
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .quantity-selector button {
+    font-family: var(--receipt-mono);
+    color: var(--receipt-ink);
+  }
+{% endstylesheet %}
 
 {% schema %}
 {

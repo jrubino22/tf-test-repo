@@ -1,0 +1,30 @@
+{% doc %}
+  Receipt Line
+
+  Renders a dot-leader receipt line item with label and value columns.
+  Used inside the receipt-themed buy box to format product details
+  like thermal-printer line items.
+
+  @param {string} label - Left-side label text (e.g. "SUBTOTAL")
+  @param {string} value - Right-side value text (e.g. "$29.99")
+  @param {string} [class] - Additional CSS class for the line
+  @param {boolean} [bold] - Whether to render in bold (default: false)
+  @param {boolean} [uppercase] - Whether to uppercase the label (default: true)
+
+  @example
+  {% render 'receipt-line', label: 'SUBTOTAL', value: product.price | money %}
+{% enddoc %}
+
+{%- liquid
+  assign label = label | default: ''
+  assign value = value | default: ''
+  assign class = class | default: ''
+  assign bold = bold | default: false
+  assign uppercase = uppercase | default: true
+-%}
+
+<div class="receipt-line {{ class }}{% if bold %} receipt-line--bold{% endif %}">
+  <span class="receipt-line__label{% if uppercase %} receipt-line__label--upper{% endif %}">{{ label }}</span>
+  <span class="receipt-line__dots" aria-hidden="true"></span>
+  <span class="receipt-line__value">{{ value }}</span>
+</div>

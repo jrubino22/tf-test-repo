@@ -3,6 +3,13 @@
   {% # `.full-height--desktop` consumes `--header-group-height` at first paint (stylesheet below) %}
   {% render 'measure-header-heights', only_on_desktop: true %}
 {%- endif -%}
+
+{%- assign enable_receipt = block_settings.enable_receipt | default: false -%}
+{%- if enable_receipt -%}
+  {% render 'receipt-styles' %}
+  <script src="{{ 'receipt-interactions.js' | asset_url }}" type="module" fetchpriority="low"></script>
+{%- endif -%}
+
 <div
   id="ProductInformation-{{ section.id }}"
   class="
@@ -24,7 +31,31 @@
         {{- closest.product.title }}
       </a>
     </div>
-    {% content_for 'blocks' %}
+
+    {%- if enable_receipt -%}
+      <receipt-container data-animate="false">
+        <div class="receipt-paper">
+          <div class="receipt-header">
+            <p class="receipt-header__shop-name">{{ block_settings.receipt_shop_name | default: shop.name }}</p>
+            {%- if block_settings.receipt_tagline != blank -%}
+              <p class="receipt-header__tagline">{{ block_settings.receipt_tagline }}</p>
+            {%- endif -%}
+            <p class="receipt-header__date" ref="receiptDate"></p>
+          </div>
+          <div class="receipt-body">
+            {% content_for 'blocks' %}
+          </div>
+          <div class="receipt-footer">
+            <p class="receipt-footer__barcode">||||| {{ closest.product.selected_or_first_available_variant.barcode | default: closest.product.id }} |||||</p>
+            <p class="receipt-footer__message">Thank you for shopping with us!</p>
+          </div>
+        </div>
+        <div class="visually-hidden" aria-live="polite" ref="receiptAnnouncer"></div>
+      </receipt-container>
+    {%- else -%}
+      {% content_for 'blocks' %}
+    {%- endif -%}
+
   {% endcapture %}
 
   {% render 'group',
@@ -397,6 +428,27 @@
       "step": 1,
       "unit": "px",
       "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Receipt"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_receipt",
+      "label": "Enable receipt style",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "receipt_shop_name",
+      "label": "Receipt shop name",
+      "default": "SHOP RECEIPT"
+    },
+    {
+      "type": "text",
+      "id": "receipt_tagline",
+      "label": "Receipt tagline"
     },
     {
       "type": "header",

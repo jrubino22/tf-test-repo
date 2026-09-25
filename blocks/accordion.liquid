@@ -26,6 +26,29 @@
 
 {% render 'accordion-styles' %}
 
+{% stylesheet %}
+  /* Receipt mode overrides */
+  receipt-container .accordion summary {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .accordion--dividers details {
+    border-color: var(--receipt-ink-faded);
+    border-style: dashed;
+  }
+
+  receipt-container .accordion .rte,
+  receipt-container .accordion .text-block {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm, 0.75rem);
+    color: var(--receipt-ink-light);
+  }
+{% endstylesheet %}
+
 {% schema %}
 {
   "name": "t:names.accordion",

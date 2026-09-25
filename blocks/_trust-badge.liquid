@@ -71,6 +71,19 @@
     color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
     line-height: 1.4;
   }
+
+  /* Receipt mode overrides */
+  receipt-container .pbb-trust-badge__icon {
+    color: var(--receipt-ink-light);
+  }
+
+  receipt-container .pbb-trust-badge__label {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink-light);
+  }
 {% endstylesheet %}
 
 {% schema %}

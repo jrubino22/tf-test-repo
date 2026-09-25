@@ -3,11 +3,45 @@
   if request.visual_preview_mode and product_resource == blank
     assign product_resource = collections.all.products.first
   endif
+
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
 -%}
 
 {% unless product_resource == blank %}
-  {% render 'variant-main-picker', product_resource: product_resource, section: section, product: product %}
+  {%- if in_receipt -%}
+    <div class="receipt-line-item" data-reprint>
+      {% render 'receipt-line', label: 'OPTIONS', value: '', bold: true %}
+      {% render 'variant-main-picker', product_resource: product_resource, section: section, product: product %}
+    </div>
+  {%- else -%}
+    {% render 'variant-main-picker', product_resource: product_resource, section: section, product: product %}
+  {%- endif -%}
 {% endunless %}
+
+{% stylesheet %}
+  receipt-container .variant-picker {
+    font-family: var(--receipt-mono);
+  }
+
+  receipt-container .variant-picker label,
+  receipt-container .variant-picker .option-label {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .variant-picker select,
+  receipt-container .variant-picker .variant-button {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+  }
+{% endstylesheet %}
 
 {% schema %}
 {

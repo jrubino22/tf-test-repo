@@ -1,0 +1,338 @@
+{% doc %}
+  Receipt Styles
+
+  Core CSS custom properties and keyframes for the receipt-themed buy box.
+  Renders once per page via Shopify stylesheet dedup. Provides the paper
+  texture, zigzag edges, ink colors, and animation definitions.
+
+  @example
+  {% render 'receipt-styles' %}
+{% enddoc %}
+
+{% stylesheet %}
+  /* Receipt design tokens */
+  receipt-container {
+    --receipt-paper: #faf8f4;
+    --receipt-ink: #2c2c2c;
+    --receipt-ink-light: #6b6b6b;
+    --receipt-ink-faded: #a0a0a0;
+    --receipt-accent: #c0392b;
+    --receipt-success: #27ae60;
+    --receipt-mono: var(--font-mono--family, 'Courier New', monospace);
+    --receipt-dot-char: '.';
+    --receipt-zigzag-size: 10px;
+    --receipt-stamp-rotation: -6deg;
+    --receipt-line-height: 1.6;
+    --receipt-font-size: 0.8125rem;
+    --receipt-font-size-sm: 0.75rem;
+    --receipt-font-size-lg: 1rem;
+    --receipt-padding-inline: 1.25rem;
+    display: block;
+  }
+
+  /* Paper surface */
+  .receipt-paper {
+    position: relative;
+    background-color: var(--receipt-paper);
+    color: var(--receipt-ink);
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size);
+    line-height: var(--receipt-line-height);
+  }
+
+  /* Zigzag torn top edge */
+  .receipt-paper::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--receipt-zigzag-size) * -1);
+    left: 0;
+    right: 0;
+    height: var(--receipt-zigzag-size);
+    background: linear-gradient(135deg, var(--receipt-paper) 33.33%, transparent 33.33%) 0 0,
+                linear-gradient(225deg, var(--receipt-paper) 33.33%, transparent 33.33%) 0 0;
+    background-size: var(--receipt-zigzag-size) var(--receipt-zigzag-size);
+    background-position: top left;
+    background-repeat: repeat-x;
+  }
+
+  /* Zigzag torn bottom edge */
+  .receipt-paper::after {
+    content: '';
+    position: absolute;
+    bottom: calc(var(--receipt-zigzag-size) * -1);
+    left: 0;
+    right: 0;
+    height: var(--receipt-zigzag-size);
+    background: linear-gradient(315deg, var(--receipt-paper) 33.33%, transparent 33.33%) 0 0,
+                linear-gradient(45deg, var(--receipt-paper) 33.33%, transparent 33.33%) 0 0;
+    background-size: var(--receipt-zigzag-size) var(--receipt-zigzag-size);
+    background-position: bottom left;
+    background-repeat: repeat-x;
+  }
+
+  /* Dot-leader receipt line */
+  .receipt-line {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size);
+    line-height: var(--receipt-line-height);
+    color: var(--receipt-ink);
+    padding-block: 2px;
+  }
+
+  .receipt-line--bold {
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  .receipt-line__label {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .receipt-line__label--upper {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .receipt-line__dots {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--receipt-ink-faded);
+  }
+
+  .receipt-line__dots::before {
+    content: '....................................................................';
+    letter-spacing: 2px;
+  }
+
+  .receipt-line__value {
+    flex-shrink: 0;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  /* Rubber stamp badge */
+  .receipt-stamp {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transform: rotate(var(--receipt-stamp-rotation));
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .receipt-stamp--savings {
+    color: var(--receipt-accent);
+    border-color: var(--receipt-accent);
+  }
+
+  .receipt-stamp--shipping {
+    color: var(--receipt-success);
+    border-color: var(--receipt-success);
+  }
+
+  .receipt-stamp--info {
+    color: var(--receipt-ink-light);
+    border-color: var(--receipt-ink-light);
+  }
+
+  /* Receipt divider */
+  .receipt-divider {
+    border: none;
+    border-top: 1px dashed var(--receipt-ink-faded);
+    margin-block: 8px;
+  }
+
+  /* Receipt header */
+  .receipt-header {
+    text-align: center;
+    padding: var(--receipt-padding-inline);
+    padding-block-end: 8px;
+    border-bottom: 1px dashed var(--receipt-ink-faded);
+    margin-block-end: 8px;
+  }
+
+  .receipt-header__shop-name {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-lg);
+    font-weight: var(--font-weight-bold, 700);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin: 0;
+  }
+
+  .receipt-header__tagline {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    color: var(--receipt-ink-light);
+    margin: 4px 0 0;
+  }
+
+  .receipt-header__date {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    color: var(--receipt-ink-faded);
+    margin: 4px 0 0;
+  }
+
+  /* Receipt footer */
+  .receipt-footer {
+    text-align: center;
+    padding: 8px var(--receipt-padding-inline);
+    padding-block-start: 8px;
+    border-top: 1px dashed var(--receipt-ink-faded);
+    margin-block-start: 8px;
+  }
+
+  .receipt-footer__barcode {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    letter-spacing: 0.3em;
+    color: var(--receipt-ink-faded);
+    margin: 0;
+  }
+
+  .receipt-footer__message {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    color: var(--receipt-ink-light);
+    margin: 4px 0 0;
+  }
+
+  /* Receipt content area */
+  .receipt-body {
+    padding-inline: var(--receipt-padding-inline);
+  }
+
+  /* Receipt line item wrapper for blocks */
+  .receipt-line-item {
+    padding-block: 4px;
+  }
+
+  /* Block character progress bar */
+  .receipt-progress {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size);
+    line-height: 1;
+    display: block;
+  }
+
+  .receipt-progress__bar {
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .receipt-progress__filled {
+    color: var(--receipt-success);
+  }
+
+  .receipt-progress__empty {
+    color: var(--receipt-ink-faded);
+  }
+
+  /* Print-in animation */
+  @keyframes receipt-print-line {
+    from {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Tear perforation line */
+  .receipt-perforation {
+    position: relative;
+    margin-block: 12px;
+    border: none;
+    height: 0;
+    border-top: 2px dashed var(--receipt-ink-faded);
+  }
+
+  .receipt-perforation::before {
+    content: '✂';
+    position: absolute;
+    left: -4px;
+    top: -10px;
+    font-size: 14px;
+    color: var(--receipt-ink-faded);
+    line-height: 1;
+  }
+
+  /* Odometer digit animation */
+  @keyframes receipt-digit-roll {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .receipt-odometer {
+    display: inline-flex;
+    overflow: hidden;
+    vertical-align: baseline;
+  }
+
+  .receipt-odometer__digit {
+    display: inline-block;
+  }
+
+  /* Reduced motion: disable all receipt animations */
+  @media (prefers-reduced-motion: reduce) {
+    .receipt-odometer__digit,
+    .receipt-line-item,
+    receipt-container {
+      animation: none !important; /* A11y override */
+      transition: none !important; /* A11y override */
+    }
+  }
+
+  /* Print-in stagger for receipt lines */
+  receipt-container[data-animate="true"] .receipt-line-item {
+    opacity: 0;
+    animation: receipt-print-line 0.15s ease-out forwards;
+  }
+
+  /* Mini receipt stub for mobile sticky bar */
+  .mini-receipt {
+    background: var(--receipt-paper);
+    color: var(--receipt-ink);
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    border-radius: 2px;
+    padding: 6px 10px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  }
+
+  .mini-receipt__line {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mini-receipt__label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink-light);
+  }
+
+  .mini-receipt__value {
+    font-weight: var(--font-weight-bold, 700);
+  }
+{% endstylesheet %}

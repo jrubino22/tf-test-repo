@@ -7,8 +7,17 @@
   assign max_days = block.settings.max_days | default: 7
   assign cutoff_hour = block.settings.cutoff_hour | default: 14
   assign show_countdown = block.settings.show_countdown
+
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
 -%}
 
+{%- if in_receipt -%}
+  <div class="receipt-line-item" data-reprint>
+{%- endif -%}
 <delivery-estimate
   class="pbb-delivery spacing-style"
   style="{% render 'spacing-style', settings: block.settings %}"
@@ -37,6 +46,9 @@
     {%- endif -%}
   </div>
 </delivery-estimate>
+{%- if in_receipt -%}
+  </div>
+{%- endif -%}
 
 {% stylesheet %}
   .pbb-delivery {
@@ -84,6 +96,36 @@
     font-weight: var(--font-weight-semibold, 600);
     margin: 0;
     padding-inline-start: calc(20px + var(--gap-sm));
+  }
+
+  /* Receipt mode overrides */
+  receipt-container .pbb-delivery__icon {
+    display: none;
+  }
+
+  receipt-container .pbb-delivery__label {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .pbb-delivery__dates {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .pbb-delivery__countdown {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm, 0.75rem);
+    color: var(--receipt-accent);
+    padding-inline-start: 0;
+  }
+
+  receipt-container .pbb-delivery__row {
+    gap: var(--gap-2xs);
   }
 {% endstylesheet %}
 

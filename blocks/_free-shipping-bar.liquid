@@ -44,37 +44,66 @@
   else
     assign formatted_remaining = remaining | money
   endif
+
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
 -%}
 
 {%- if threshold_cents > 0 -%}
-  <free-shipping-bar
-    class="pbb-shipping spacing-style"
-    style="
-      {% render 'spacing-style', settings: block.settings %}
-      --pbb-shipping-progress: {{ progress | divided_by: 100.0 }};
-    "
-    data-threshold="{{ threshold_cents }}"
-    data-cart-total="{{ cart_total }}"
-    data-item-price="{{ item_price }}"
-    data-quantity="1"
-    data-money-format="{{ shop.money_format }}"
-    data-currency="{{ cart.currency.iso_code | default: shop.currency }}"
-    data-complete="{{ is_complete }}"
-    {{ block.shopify_attributes }}
-  >
-    <div class="pbb-shipping__container">
-      <div class="pbb-shipping__bar">
-        <div class="pbb-shipping__fill" ref="progressFill"></div>
-      </div>
-      <p class="pbb-shipping__text" ref="progressText">
-        {%- if is_complete -%}
-          You've unlocked free shipping!
-        {%- else -%}
-          Add {{ formatted_remaining }} more for free shipping
-        {%- endif -%}
-      </p>
+  {%- if in_receipt -%}
+    <div class="receipt-line-item" data-reprint {{ block.shopify_attributes }}>
+      {%- if is_complete -%}
+        {% render 'receipt-stamp', text: 'FREE SHIPPING', type: 'shipping' %}
+      {%- else -%}
+        {% render 'receipt-line', label: 'FREE SHIPPING', value: formatted_remaining | prepend: '-' %}
+        <receipt-progress-bar
+          class="receipt-progress"
+          data-threshold="{{ threshold_cents }}"
+          data-projected="{{ projected }}"
+        >
+          <span class="receipt-progress__bar" ref="barOutput" aria-label="Free shipping progress {{ progress }}%">
+            {%- assign filled_count = progress | divided_by: 5 -%}
+            {%- assign empty_count = 20 | minus: filled_count -%}
+            {%- for i in (1..20) -%}
+              {%- if i <= filled_count -%}▓{%- else -%}░{%- endif -%}
+            {%- endfor -%}
+          </span>
+        </receipt-progress-bar>
+      {%- endif -%}
     </div>
-  </free-shipping-bar>
+  {%- else -%}
+    <free-shipping-bar
+      class="pbb-shipping spacing-style"
+      style="
+        {% render 'spacing-style', settings: block.settings %}
+        --pbb-shipping-progress: {{ progress | divided_by: 100.0 }};
+      "
+      data-threshold="{{ threshold_cents }}"
+      data-cart-total="{{ cart_total }}"
+      data-item-price="{{ item_price }}"
+      data-quantity="1"
+      data-money-format="{{ shop.money_format }}"
+      data-currency="{{ cart.currency.iso_code | default: shop.currency }}"
+      data-complete="{{ is_complete }}"
+      {{ block.shopify_attributes }}
+    >
+      <div class="pbb-shipping__container">
+        <div class="pbb-shipping__bar">
+          <div class="pbb-shipping__fill" ref="progressFill"></div>
+        </div>
+        <p class="pbb-shipping__text" ref="progressText">
+          {%- if is_complete -%}
+            You've unlocked free shipping!
+          {%- else -%}
+            Add {{ formatted_remaining }} more for free shipping
+          {%- endif -%}
+        </p>
+      </div>
+    </free-shipping-bar>
+  {%- endif -%}
 {%- endif -%}
 
 {% stylesheet %}
@@ -124,6 +153,16 @@
   [data-complete="true"] .pbb-shipping__text {
     color: var(--pbb-success);
     font-weight: var(--font-weight-semibold, 600);
+  }
+
+  /* Receipt mode overrides */
+  receipt-container .receipt-progress__bar {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink);
+    display: block;
+    margin-block-start: var(--margin-2xs);
   }
 {% endstylesheet %}
 
