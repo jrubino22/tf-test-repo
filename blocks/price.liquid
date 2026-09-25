@@ -45,14 +45,17 @@
 {%- if in_receipt -%}
   <div class="receipt-line-item" data-reprint {{ block.shopify_attributes }}>
     {%- if selected_variant != blank -%}
-      {% render 'receipt-line', label: 'SUBTOTAL', value: selected_variant.price | money, line_id: 'subtotal', checkmark: true %}
+      {%- assign receipt_subtotal_value = selected_variant.price | money -%}
+      {% render 'receipt-line', label: 'SUBTOTAL', value: receipt_subtotal_value, line_id: 'subtotal', checkmark: true %}
 
       {%- if selected_variant.compare_at_price > selected_variant.price -%}
         {%- assign savings = selected_variant.compare_at_price | minus: selected_variant.price -%}
+        {%- assign receipt_savings_value = savings | money -%}
         <div class="receipt-price__savings-row">
-          {% render 'receipt-line', label: 'YOU SAVE', value: savings | money, line_id: 'savings' %}
+          {% render 'receipt-line', label: 'YOU SAVE', value: receipt_savings_value, line_id: 'savings' %}
           {%- assign savings_pct_raw = savings | times: 100 | divided_by: selected_variant.compare_at_price -%}
-          {% render 'receipt-stamp', text: savings_pct_raw | append: '% OFF', type: 'savings' %}
+          {%- assign receipt_stamp_text = savings_pct_raw | append: '% OFF' -%}
+          {% render 'receipt-stamp', text: receipt_stamp_text, type: 'savings' %}
         </div>
       {%- endif -%}
 

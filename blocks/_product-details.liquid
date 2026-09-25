@@ -23,6 +23,8 @@
     data-view-transition-type="product-details"
   {% endif %}
 >
+  {% capture blocks_content %}{% content_for 'blocks' %}{% endcapture %}
+
   {% capture children %}
     <div class="view-product-title">
       <a
@@ -56,7 +58,7 @@
             </div>
           {%- endif -%}
           <div class="receipt-body">
-            {% content_for 'blocks' %}
+            {{ blocks_content }}
           </div>
           <div class="receipt-footer">
             {%- if block_settings.show_barcode_strip != false -%}
@@ -68,7 +70,7 @@
         <div class="visually-hidden" aria-live="polite" ref="receiptAnnouncer"></div>
       </receipt-container>
     {%- else -%}
-      {% content_for 'blocks' %}
+      {{ blocks_content }}
     {%- endif -%}
 
   {% endcapture %}

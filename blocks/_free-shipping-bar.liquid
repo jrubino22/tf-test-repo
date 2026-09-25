@@ -58,7 +58,8 @@
       {%- if is_complete -%}
         {% render 'receipt-stamp', text: 'FREE SHIPPING', type: 'shipping' %}
       {%- else -%}
-        {% render 'receipt-line', label: 'FREE SHIPPING', value: formatted_remaining | prepend: '-' %}
+        {%- assign receipt_remaining_value = formatted_remaining | prepend: '-' -%}
+        {% render 'receipt-line', label: 'FREE SHIPPING', value: receipt_remaining_value %}
         <receipt-progress-bar
           class="receipt-progress"
           data-threshold="{{ threshold_cents }}"
