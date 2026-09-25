@@ -227,7 +227,11 @@
             </volume-pricing>
           {%- endif -%}
           {%- if in_receipt -%}
-            <hr class="receipt-perforation">
+            <div class="receipt-tear-section">
+              <hr class="receipt-perforation">
+              {%- if can_add_to_cart -%}
+                <p class="receipt-tear-hint" aria-hidden="true">TEAR TO ADD &mdash; {{ variant.price | money }}</p>
+              {%- endif -%}
           {%- endif -%}
           {% content_for 'block',
             type: 'add-to-cart',
@@ -242,6 +246,9 @@
             can_add_to_cart: can_add_to_cart,
             form_obj: form
           %}
+          {%- if in_receipt -%}
+            </div>
+          {%- endif -%}
         </div>
         {%- if block_settings.gift_card_form and product.gift_card? -%}
           </span>

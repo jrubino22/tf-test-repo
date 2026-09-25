@@ -5,23 +5,31 @@
   Styled to look like an ink stamp rotated slightly with rough edges.
 
   @param {string} text - Stamp text content (e.g. "SAVE 20%")
-  @param {string} [type] - Stamp type: "savings", "shipping", "info" (default: "info")
+  @param {string} [type] - Stamp type: "savings", "shipping", "info", "low-stock", "sold-out", "free-shipping", "subscription", "declined" (default: "info")
   @param {string} [class] - Additional CSS class
+  @param {boolean} [visible] - Whether stamp is visible initially (default: true)
+  @param {boolean} [animate] - Whether to use stamp-in animation (default: false)
 
   @example
-  {% render 'receipt-stamp', text: 'FREE SHIPPING', type: 'shipping' %}
+  {% render 'receipt-stamp', text: 'FREE SHIPPING', type: 'shipping', animate: true %}
 {% enddoc %}
 
 {%- liquid
   assign text = text | default: ''
   assign type = type | default: 'info'
   assign class = class | default: ''
+  assign visible = visible | default: true
+  assign animate = animate | default: false
 
   unless text != blank
     break
   endunless
 -%}
 
-<span class="receipt-stamp receipt-stamp--{{ type }} {{ class }}" aria-label="{{ text }}">
+<span
+  class="receipt-stamp receipt-stamp--{{ type }}{% if animate %} receipt-stamp--animate{% endif %} {{ class }}"
+  aria-label="{{ text }}"
+  {% unless visible %}hidden{% endunless %}
+>
   {{ text }}
 </span>

@@ -139,13 +139,22 @@
             </span>
           {% endif %}
           <span class="add-to-cart-text__content">
-            <span>
+            <span class="sticky-add-to-cart__default-text">
               {%- if current_variant.available -%}
                 {{- 'products.product.add_to_cart' | t -}}
               {%- elsif current_variant == blank -%}
                 {{- 'products.product.unavailable' | t -}}
               {%- else -%}
                 {{- 'products.product.sold_out' | t -}}
+              {%- endif -%}
+            </span>
+            <span class="sticky-add-to-cart__receipt-text">
+              {%- if current_variant.available -%}
+                TEAR TO ADD &mdash; {{ current_variant.price | money }}
+              {%- elsif current_variant == blank -%}
+                UNAVAILABLE
+              {%- else -%}
+                SOLD OUT
               {%- endif -%}
             </span>
             <span
@@ -378,16 +387,24 @@
     }
   }
 
+  /* Receipt text toggling — default: show normal, hide receipt */
+  .sticky-add-to-cart__receipt-text {
+    display: none;
+  }
+
   /* Receipt mode sticky bar overrides */
   sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__bar {
     font-family: var(--font-mono--family, 'Anonymous Pro', monospace);
     background: var(--receipt-paper, #faf8f4);
+    color: var(--receipt-ink, #2c2c2c);
     border-radius: 0;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   }
 
   sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__bar::before {
     border-radius: 0;
+    background: var(--receipt-paper, #faf8f4);
+    backdrop-filter: none;
   }
 
   sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__title {
@@ -395,14 +412,18 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: var(--receipt-ink, #2c2c2c);
   }
 
   sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__variant {
     font-family: var(--font-mono--family, 'Anonymous Pro', monospace);
+    color: var(--receipt-ink, #2c2c2c);
+    opacity: 0.7;
   }
 
   sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__price {
     font-family: var(--font-mono--family, 'Anonymous Pro', monospace);
+    color: var(--receipt-ink, #2c2c2c);
   }
 
   sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__button {
@@ -410,15 +431,47 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     border-radius: 0;
+    background: var(--receipt-ink, #2c2c2c);
+    color: var(--receipt-paper, #faf8f4);
   }
 
   sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__image {
     border-radius: 0;
   }
 
+  /* In receipt mode, show receipt text and hide default */
+  sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__default-text {
+    display: none;
+  }
+
+  sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__receipt-text {
+    display: inline;
+  }
+
+  /* Mini receipt stub — zigzag top edge on mobile */
   @media screen and (max-width: 749px) {
     sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__bar {
       border-radius: 0;
+      background:
+        linear-gradient(135deg, var(--receipt-paper, #faf8f4) 33.33%, transparent 33.33%) -6px 0 / 12px 12px,
+        linear-gradient(225deg, var(--receipt-paper, #faf8f4) 33.33%, transparent 33.33%) -6px 0 / 12px 12px,
+        var(--receipt-paper, #faf8f4);
+      background-position: top left, top right, bottom;
+      background-size: 12px 12px, 12px 12px, 100% calc(100% - 6px);
+      background-repeat: repeat-x, repeat-x, no-repeat;
+      padding-block-start: calc(var(--padding-sm) + 6px);
+    }
+
+    sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__bar::before {
+      display: none;
+    }
+
+    sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__bar .add-to-cart-text__content {
+      display: initial;
+    }
+
+    sticky-add-to-cart[data-receipt-mode="true"] .sticky-add-to-cart__button {
+      width: auto;
     }
   }
 {% endstylesheet %}

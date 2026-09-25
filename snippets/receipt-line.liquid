@@ -8,23 +8,30 @@
   @param {string} label - Left-side label text (e.g. "SUBTOTAL")
   @param {string} value - Right-side value text (e.g. "$29.99")
   @param {string} [class] - Additional CSS class for the line
+  @param {string} [line_id] - Unique ID for animation targeting
   @param {boolean} [bold] - Whether to render in bold (default: false)
   @param {boolean} [uppercase] - Whether to uppercase the label (default: true)
+  @param {boolean} [checkmark] - Show reprint completion checkmark (default: false)
 
   @example
-  {% render 'receipt-line', label: 'SUBTOTAL', value: product.price | money %}
+  {% render 'receipt-line', label: 'SUBTOTAL', value: product.price | money, line_id: 'subtotal' %}
 {% enddoc %}
 
 {%- liquid
   assign label = label | default: ''
   assign value = value | default: ''
   assign class = class | default: ''
+  assign line_id = line_id | default: ''
   assign bold = bold | default: false
   assign uppercase = uppercase | default: true
+  assign checkmark = checkmark | default: false
 -%}
 
-<div class="receipt-line {{ class }}{% if bold %} receipt-line--bold{% endif %}">
+<div class="receipt-line {{ class }}{% if bold %} receipt-line--bold{% endif %}"{% if line_id != blank %} data-line-id="{{ line_id }}"{% endif %}>
   <span class="receipt-line__label{% if uppercase %} receipt-line__label--upper{% endif %}">{{ label }}</span>
   <span class="receipt-line__dots" aria-hidden="true"></span>
   <span class="receipt-line__value">{{ value }}</span>
+  {%- if checkmark -%}
+    <span class="receipt-line__check" aria-hidden="true">✓</span>
+  {%- endif -%}
 </div>

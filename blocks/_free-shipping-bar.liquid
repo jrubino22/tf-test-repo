@@ -64,11 +64,15 @@
           data-threshold="{{ threshold_cents }}"
           data-projected="{{ projected }}"
         >
-          <span class="receipt-progress__bar" ref="barOutput" aria-label="Free shipping progress {{ progress }}%">
+          <span class="receipt-progress__bar" ref="progressBar" aria-label="Free shipping progress {{ progress }}%">
             {%- assign filled_count = progress | divided_by: 5 -%}
-            {%- assign empty_count = 20 | minus: filled_count -%}
             {%- for i in (1..20) -%}
-              {%- if i <= filled_count -%}▓{%- else -%}░{%- endif -%}
+              {%- assign char_index = i | minus: 1 -%}
+              {%- if i <= filled_count -%}
+                <span class="receipt-progress__char receipt-progress__char--filled" style="--char-index: {{ char_index }}">▓</span>
+              {%- else -%}
+                <span class="receipt-progress__char" style="--char-index: {{ char_index }}">░</span>
+              {%- endif -%}
             {%- endfor -%}
           </span>
         </receipt-progress-bar>

@@ -33,20 +33,35 @@
     </div>
 
     {%- if enable_receipt -%}
-      <receipt-container data-animate="false">
+      <receipt-container
+        data-printed="false"
+        style="
+          {%- if block_settings.receipt_paper_color != blank -%}--receipt-paper-override: {{ block_settings.receipt_paper_color }};{%- endif -%}
+          {%- if block_settings.receipt_ink_color != blank -%}--receipt-ink-override: {{ block_settings.receipt_ink_color }};{%- endif -%}
+          {%- if block_settings.stamp_rotation != blank -%}--receipt-stamp-rotation-override: -{{ block_settings.stamp_rotation }}deg;{%- endif -%}
+        "
+        {% unless block_settings.enable_print_animation == false %}data-animate-print{% endunless %}
+        {% if block_settings.enable_tear_gesture %}data-tear-gesture{% endif %}
+      >
         <div class="receipt-paper">
-          <div class="receipt-header">
-            <p class="receipt-header__shop-name">{{ block_settings.receipt_shop_name | default: shop.name }}</p>
-            {%- if block_settings.receipt_tagline != blank -%}
-              <p class="receipt-header__tagline">{{ block_settings.receipt_tagline }}</p>
-            {%- endif -%}
-            <p class="receipt-header__date" ref="receiptDate"></p>
-          </div>
+          {%- if block_settings.show_receipt_header != false -%}
+            <div class="receipt-header">
+              <p class="receipt-header__shop-name">{{ block_settings.receipt_shop_name | default: shop.name }}</p>
+              {%- if block_settings.receipt_tagline != blank -%}
+                <p class="receipt-header__tagline">{{ block_settings.receipt_tagline }}</p>
+              {%- endif -%}
+              {%- assign order_num = 'now' | date: '%s' | slice: -4, 4 -%}
+              <p class="receipt-header__order-number">ORDER #{{ order_num }}</p>
+              <p class="receipt-header__date" ref="receiptDate"></p>
+            </div>
+          {%- endif -%}
           <div class="receipt-body">
             {% content_for 'blocks' %}
           </div>
           <div class="receipt-footer">
-            <p class="receipt-footer__barcode">||||| {{ closest.product.selected_or_first_available_variant.barcode | default: closest.product.id }} |||||</p>
+            {%- if block_settings.show_barcode_strip != false -%}
+              <div class="receipt-footer__barcode" aria-hidden="true"></div>
+            {%- endif -%}
             <p class="receipt-footer__message">Thank you for shopping with us!</p>
           </div>
         </div>
@@ -449,6 +464,50 @@
       "type": "text",
       "id": "receipt_tagline",
       "label": "Receipt tagline"
+    },
+    {
+      "type": "color",
+      "id": "receipt_paper_color",
+      "label": "Receipt paper color"
+    },
+    {
+      "type": "color",
+      "id": "receipt_ink_color",
+      "label": "Receipt ink color"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_print_animation",
+      "label": "Print-in animation",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_tear_gesture",
+      "label": "Tear-to-add gesture",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_receipt_header",
+      "label": "Show receipt header",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_barcode_strip",
+      "label": "Show barcode strip",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "stamp_rotation",
+      "label": "Stamp rotation",
+      "min": 0,
+      "max": 8,
+      "step": 1,
+      "unit": "deg",
+      "default": 6
     },
     {
       "type": "header",

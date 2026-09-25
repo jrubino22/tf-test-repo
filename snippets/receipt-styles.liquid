@@ -12,8 +12,8 @@
 {% stylesheet %}
   /* Receipt design tokens */
   receipt-container {
-    --receipt-paper: #faf8f4;
-    --receipt-ink: #2c2c2c;
+    --receipt-paper: var(--receipt-paper-override, #faf8f4);
+    --receipt-ink: var(--receipt-ink-override, #2c2c2c);
     --receipt-ink-light: #6b6b6b;
     --receipt-ink-faded: #a0a0a0;
     --receipt-accent: #c0392b;
@@ -21,7 +21,7 @@
     --receipt-mono: var(--font-mono--family, 'Courier New', monospace);
     --receipt-dot-char: '.';
     --receipt-zigzag-size: 10px;
-    --receipt-stamp-rotation: -6deg;
+    --receipt-stamp-rotation: var(--receipt-stamp-rotation-override, -6deg);
     --receipt-line-height: 1.6;
     --receipt-font-size: 0.8125rem;
     --receipt-font-size-sm: 0.75rem;
@@ -70,7 +70,9 @@
     background-repeat: repeat-x;
   }
 
-  /* Dot-leader receipt line */
+  /* ==============================
+     Dot-leader receipt line
+     ============================== */
   .receipt-line {
     display: flex;
     align-items: baseline;
@@ -114,7 +116,20 @@
     text-align: right;
   }
 
-  /* Rubber stamp badge */
+  .receipt-line__check {
+    flex-shrink: 0;
+    color: var(--receipt-success);
+    margin-inline-start: 4px;
+    opacity: 0;
+  }
+
+  .receipt-line__check--visible {
+    opacity: 1;
+  }
+
+  /* ==============================
+     Rubber stamp badge
+     ============================== */
   .receipt-stamp {
     display: inline-block;
     padding: 4px 12px;
@@ -135,7 +150,8 @@
     border-color: var(--receipt-accent);
   }
 
-  .receipt-stamp--shipping {
+  .receipt-stamp--shipping,
+  .receipt-stamp--free-shipping {
     color: var(--receipt-success);
     border-color: var(--receipt-success);
   }
@@ -145,14 +161,47 @@
     border-color: var(--receipt-ink-light);
   }
 
-  /* Receipt divider */
+  .receipt-stamp--low-stock {
+    color: #e67e22;
+    border-color: #e67e22;
+  }
+
+  .receipt-stamp--sold-out {
+    color: var(--receipt-accent);
+    border-color: var(--receipt-accent);
+    opacity: 0.7;
+  }
+
+  .receipt-stamp--subscription {
+    color: #8e44ad;
+    border-color: #8e44ad;
+  }
+
+  .receipt-stamp--declined {
+    color: var(--receipt-accent);
+    border-color: var(--receipt-accent);
+    font-size: var(--receipt-font-size-lg);
+    padding: 8px 16px;
+    border-width: 3px;
+  }
+
+  /* Stamp-in animation class */
+  .receipt-stamp--animate {
+    animation: stamp-in 0.4s cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+  }
+
+  /* ==============================
+     Receipt divider
+     ============================== */
   .receipt-divider {
     border: none;
     border-top: 1px dashed var(--receipt-ink-faded);
     margin-block: 8px;
   }
 
-  /* Receipt header */
+  /* ==============================
+     Receipt header
+     ============================== */
   .receipt-header {
     text-align: center;
     padding: var(--receipt-padding-inline);
@@ -177,6 +226,15 @@
     margin: 4px 0 0;
   }
 
+  .receipt-header__order,
+  .receipt-header__order-number {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    color: var(--receipt-ink-faded);
+    margin: 4px 0 0;
+    letter-spacing: 0.08em;
+  }
+
   .receipt-header__date {
     font-family: var(--receipt-mono);
     font-size: var(--receipt-font-size-sm);
@@ -184,7 +242,9 @@
     margin: 4px 0 0;
   }
 
-  /* Receipt footer */
+  /* ==============================
+     Receipt footer
+     ============================== */
   .receipt-footer {
     text-align: center;
     padding: 8px var(--receipt-padding-inline);
@@ -194,11 +254,22 @@
   }
 
   .receipt-footer__barcode {
-    font-family: var(--receipt-mono);
-    font-size: var(--receipt-font-size-sm);
-    letter-spacing: 0.3em;
-    color: var(--receipt-ink-faded);
-    margin: 0;
+    height: 24px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--receipt-ink) 0px,
+      var(--receipt-ink) 1px,
+      transparent 1px,
+      transparent 3px,
+      var(--receipt-ink) 3px,
+      var(--receipt-ink) 5px,
+      transparent 5px,
+      transparent 8px
+    );
+    background-size: 8px 100%;
+    margin: 0 auto 4px;
+    max-width: 180px;
+    opacity: 0.4;
   }
 
   .receipt-footer__message {
@@ -208,7 +279,9 @@
     margin: 4px 0 0;
   }
 
-  /* Receipt content area */
+  /* ==============================
+     Receipt content area
+     ============================== */
   .receipt-body {
     padding-inline: var(--receipt-padding-inline);
   }
@@ -218,7 +291,9 @@
     padding-block: 4px;
   }
 
-  /* Block character progress bar */
+  /* ==============================
+     Block character progress bar
+     ============================== */
   .receipt-progress {
     font-family: var(--receipt-mono);
     font-size: var(--receipt-font-size);
@@ -240,19 +315,19 @@
     color: var(--receipt-ink-faded);
   }
 
-  /* Print-in animation */
-  @keyframes receipt-print-line {
-    from {
-      opacity: 0;
-      transform: translateY(-2px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* Per-character stagger for progress bar */
+  .receipt-progress__char {
+    display: inline-block;
+    opacity: 0;
   }
 
-  /* Tear perforation line */
+  receipt-container[data-printed="true"] .receipt-progress__char {
+    animation: receipt-type 0.1s ease-out forwards;
+  }
+
+  /* ==============================
+     Tear perforation line
+     ============================== */
   .receipt-perforation {
     position: relative;
     margin-block: 12px;
@@ -271,7 +346,338 @@
     line-height: 1;
   }
 
-  /* Odometer digit animation */
+  /* ==============================
+     Tear button
+     ============================== */
+  .receipt-tear-button {
+    display: block;
+    width: 100%;
+    position: relative;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .receipt-tear-button--tearing {
+    cursor: grabbing;
+  }
+
+  .receipt-tear-button__hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    color: var(--receipt-ink-faded);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-block: 4px;
+  }
+
+  .receipt-tear-button__hint-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .receipt-tear-button--tearing .receipt-tear-button__hint-arrow {
+    transform: translateX(4px);
+  }
+
+  /* Tear section wrapper (for horizontal swipe gesture) */
+  .receipt-tear-section {
+    position: relative;
+    touch-action: pan-y;
+  }
+
+  .receipt-tear-section--active {
+    cursor: grabbing;
+  }
+
+  /* Tear hint text */
+  .receipt-tear-hint {
+    text-align: center;
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    color: var(--receipt-ink-faded);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 4px 0 8px;
+  }
+
+  /* Receipt line item total */
+  .receipt-line-item--total {
+    padding-block: 4px 0;
+  }
+
+  .receipt-line-item--total .receipt-line {
+    font-size: var(--receipt-font-size-lg);
+  }
+
+  /* ==============================
+     Odometer
+     ============================== */
+  .receipt-odometer {
+    display: inline-flex;
+    overflow: hidden;
+    vertical-align: baseline;
+  }
+
+  .receipt-odometer__digit {
+    display: inline-block;
+  }
+
+  .receipt-odometer__digit--rolling {
+    animation: receipt-digit-roll 0.3s ease-out forwards;
+  }
+
+  /* ==============================
+     Punched ticket variant pills
+     ============================== */
+  receipt-container .variant-button,
+  receipt-container .variant-picker__option {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--receipt-ink-faded);
+    border-radius: 0;
+    background: var(--receipt-paper);
+    color: var(--receipt-ink);
+    position: relative;
+    padding: 6px 12px 6px 16px;
+  }
+
+  /* Hole punch pseudo-element */
+  receipt-container .variant-button::before,
+  receipt-container .variant-picker__option::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1px solid var(--receipt-ink-faded);
+    background: var(--receipt-paper);
+  }
+
+  /* Active / selected state — inverted */
+  receipt-container .variant-button.is-active,
+  receipt-container .variant-button[aria-checked="true"],
+  receipt-container .variant-picker__option.is-active,
+  receipt-container .variant-picker__option[aria-checked="true"] {
+    background: var(--receipt-ink);
+    color: var(--receipt-paper);
+    border-color: var(--receipt-ink);
+  }
+
+  receipt-container .variant-button.is-active::before,
+  receipt-container .variant-button[aria-checked="true"]::before,
+  receipt-container .variant-picker__option.is-active::before,
+  receipt-container .variant-picker__option[aria-checked="true"]::before {
+    background: var(--receipt-ink);
+    border-color: var(--receipt-paper);
+  }
+
+  /* Sold out — wavy strikethrough */
+  receipt-container .variant-button[disabled],
+  receipt-container .variant-picker__option[disabled] {
+    opacity: 0.5;
+    text-decoration: line-through;
+    text-decoration-style: wavy;
+    text-decoration-color: var(--receipt-accent);
+    cursor: not-allowed;
+  }
+
+  /* Ink dot color swatches */
+  receipt-container .swatch {
+    border-radius: 0;
+    border: 1px solid var(--receipt-ink-faded);
+  }
+
+  receipt-container .swatch.is-active {
+    border-color: var(--receipt-ink);
+    box-shadow: inset 0 0 0 2px var(--receipt-paper);
+  }
+
+  /* ==============================
+     Quantity bracket buttons
+     ============================== */
+  receipt-container .quantity-selector button {
+    font-family: var(--receipt-mono);
+    font-weight: var(--font-weight-bold, 700);
+    border: 1px solid var(--receipt-ink-faded);
+    border-radius: 0;
+    background: transparent;
+    color: var(--receipt-ink);
+    min-width: 32px;
+  }
+
+  receipt-container .quantity-selector input {
+    font-family: var(--receipt-mono);
+    background: transparent;
+    border: 1px solid var(--receipt-ink-faded);
+    border-inline: none;
+    border-radius: 0;
+    color: var(--receipt-ink);
+    text-align: center;
+  }
+
+  /* ==============================
+     ATC button receipt styles
+     ============================== */
+  receipt-container .buy-buttons-block .button,
+  receipt-container .buy-buttons-block .shopify-payment-button__button {
+    font-family: var(--receipt-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-radius: 0;
+  }
+
+  /* PRINTING state — shimmer overlay */
+  receipt-container[data-state="printing"] .add-to-cart-button {
+    pointer-events: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  receipt-container[data-state="printing"] .add-to-cart-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 100%
+    );
+    animation: receipt-shimmer 1s ease-in-out infinite;
+  }
+
+  /* DECLINED state */
+  receipt-container[data-state="declined"] .add-to-cart-button {
+    opacity: 0.6;
+  }
+
+  /* ==============================
+     KEYFRAME ANIMATIONS
+     ============================== */
+
+  /* Print-in: clip-path reveal top→bottom */
+  @keyframes receipt-feed {
+    from {
+      clip-path: inset(0 0 100% 0);
+      opacity: 0;
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+      opacity: 1;
+    }
+  }
+
+  /* Single line print-in */
+  @keyframes receipt-print-line {
+    from {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Re-print: blur/slide out then type back in */
+  @keyframes receipt-reprint-out {
+    from {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      filter: blur(2px);
+      transform: translateX(-8px);
+    }
+  }
+
+  @keyframes receipt-reprint-in {
+    from {
+      opacity: 0;
+      max-width: 0;
+      overflow: hidden;
+    }
+    to {
+      opacity: 1;
+      max-width: 100%;
+      overflow: visible;
+    }
+  }
+
+  /* Tear-off: rip down+rotate */
+  @keyframes receipt-tear {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(40px) rotate(3deg);
+      opacity: 0;
+    }
+  }
+
+  /* Fly-to-cart: scale down and translate to cart icon */
+  @keyframes receipt-fly {
+    0% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.2) translateY(-60px);
+      opacity: 0;
+    }
+  }
+
+  /* Stamp-in: scale overshoot */
+  @keyframes stamp-in {
+    0% {
+      transform: rotate(var(--receipt-stamp-rotation)) scale(2);
+      opacity: 0;
+    }
+    60% {
+      transform: rotate(var(--receipt-stamp-rotation)) scale(0.9);
+      opacity: 0.9;
+    }
+    100% {
+      transform: rotate(var(--receipt-stamp-rotation)) scale(1);
+      opacity: 0.85;
+    }
+  }
+
+  /* Character-by-character typing reveal */
+  @keyframes receipt-type {
+    from {
+      opacity: 0;
+      max-width: 0;
+    }
+    to {
+      opacity: 1;
+      max-width: 1em;
+    }
+  }
+
+  /* Shimmer loading overlay */
+  @keyframes receipt-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Odometer digit roll */
   @keyframes receipt-digit-roll {
     from {
       transform: translateY(-100%);
@@ -283,41 +689,109 @@
     }
   }
 
-  .receipt-odometer {
-    display: inline-flex;
-    overflow: hidden;
-    vertical-align: baseline;
+  /* ==============================
+     Print-in stagger for receipt lines
+     ============================== */
+  receipt-container[data-printed="true"] .receipt-line-item {
+    opacity: 0;
+    animation: receipt-print-line 0.15s ease-out forwards;
+    animation-delay: calc(var(--line-index, 0) * 60ms);
   }
 
-  .receipt-odometer__digit {
-    display: inline-block;
+  /* Reprint animation classes (applied by JS) */
+  .receipt-line-item--reprint-out {
+    animation: receipt-reprint-out 0.15s ease-in forwards;
   }
 
-  /* Reduced motion: disable all receipt animations */
+  .receipt-line-item--reprint-in {
+    animation: receipt-reprint-in 0.25s ease-out forwards;
+  }
+
+  /* Tear-off animation on below-perforation area */
+  .receipt-tear-section--tearing {
+    animation: receipt-tear 0.4s ease-in forwards;
+  }
+
+  /* Fly-to-cart animation */
+  .receipt-fly-ghost {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    animation: receipt-fly 0.5s ease-in forwards;
+  }
+
+  /* ==============================
+     Focus states — ink outline
+     ============================== */
+  receipt-container button:focus-visible,
+  receipt-container a:focus-visible,
+  receipt-container input:focus-visible,
+  receipt-container select:focus-visible,
+  receipt-container [role="tab"]:focus-visible,
+  receipt-container [role="radio"]:focus-visible,
+  receipt-container .variant-button:focus-visible,
+  receipt-container .variant-picker__option:focus-visible,
+  receipt-container summary:focus-visible {
+    outline: 2px solid var(--receipt-ink);
+    outline-offset: 2px;
+  }
+
+  /* ==============================
+     Reduced motion: disable ALL receipt animations
+     ============================== */
   @media (prefers-reduced-motion: reduce) {
-    .receipt-odometer__digit,
-    .receipt-line-item,
-    receipt-container {
+    receipt-container,
+    receipt-container *,
+    .receipt-stamp,
+    .receipt-fly-ghost,
+    .mini-receipt,
+    .mini-receipt * {
       animation: none !important; /* A11y override */
       transition: none !important; /* A11y override */
     }
+
+    receipt-container[data-printed="true"] .receipt-line-item {
+      opacity: 1;
+    }
+
+    .receipt-progress__char {
+      opacity: 1;
+    }
+
+    .receipt-stamp--animate {
+      transform: rotate(var(--receipt-stamp-rotation));
+      opacity: 0.85;
+    }
   }
 
-  /* Print-in stagger for receipt lines */
-  receipt-container[data-animate="true"] .receipt-line-item {
-    opacity: 0;
-    animation: receipt-print-line 0.15s ease-out forwards;
-  }
-
-  /* Mini receipt stub for mobile sticky bar */
+  /* ==============================
+     Mini receipt stub (sticky bar)
+     ============================== */
   .mini-receipt {
+    position: relative;
     background: var(--receipt-paper);
     color: var(--receipt-ink);
     font-family: var(--receipt-mono);
     font-size: var(--receipt-font-size-sm);
-    border-radius: 2px;
     padding: 6px 10px;
+    padding-block-start: calc(6px + var(--receipt-zigzag-size, 10px));
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  }
+
+  /* Zigzag top edge on mini receipt */
+  .mini-receipt::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--receipt-zigzag-size, 10px);
+    background: linear-gradient(135deg, transparent 33.33%, var(--receipt-paper) 33.33%) 0 0,
+                linear-gradient(225deg, transparent 33.33%, var(--receipt-paper) 33.33%) 0 0;
+    background-size: var(--receipt-zigzag-size, 10px) var(--receipt-zigzag-size, 10px);
+    background-position: bottom left;
+    background-repeat: repeat-x;
+    transform: translateY(-100%);
   }
 
   .mini-receipt__line {

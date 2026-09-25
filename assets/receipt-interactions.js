@@ -1,4 +1,7 @@
 import { Component } from '@theme/component';
+import { ThemeEvents, QuantitySelectorUpdateEvent } from '@theme/events';
+import { StandardEvents, ProductSelectEvent, CartLinesUpdateEvent, CartErrorEvent } from '@shopify/events';
+import { onAnimationEnd } from '@theme/utilities';
 
 /**
  * Receipt Container
@@ -7,9 +10,11 @@ import { Component } from '@theme/component';
  * Handles:
  * - Print-in animation on first viewport intersection
  * - Line re-print animation on variant/quantity changes
- * - Tear-to-add-to-cart swipe gesture
+ * - Horizontal tear-to-add-to-cart swipe gesture
  * - Odometer price digit roll on price changes
  * - Block-character progress bar updates
+ * - PRINTING / DECLINED cart states
+ * - Fly-to-cart ghost animation
  * - Accessibility: respects prefers-reduced-motion, aria-live regions
  *
  * @extends {Component}
@@ -22,16 +27,19 @@ class ReceiptContainer extends Component {
   #hasPrinted = false;
 
   /** @type {number} */
-  #tearStartY = 0;
+  #tearStartX = 0;
 
   /** @type {boolean} */
   #isTearing = false;
+
+  /** @type {AbortController} */
+  #abortController = new AbortController();
 
   connectedCallback() {
     super.connectedCallback();
 
     if (this.#prefersReducedMotion()) {
-      this.dataset.animate = 'false';
+      this.dataset.printed = 'true';
       this.#hasPrinted = true;
     } else {
       this.#setupPrintObserver();
@@ -46,6 +54,7 @@ class ReceiptContainer extends Component {
     super.disconnectedCallback();
     this.#printObserver?.disconnect();
     this.#printObserver = null;
+    this.#abortController.abort();
   }
 
   /**
@@ -76,21 +85,24 @@ class ReceiptContainer extends Component {
   }
 
   /**
-   * Trigger cascading print-in animation on receipt line items
+   * Trigger cascading print-in animation on receipt line items.
+   * Uses CSS var --line-index for staggered delay instead of inline animationDelay.
    */
   #triggerPrintAnimation() {
-    this.dataset.animate = 'true';
     const lines = this.querySelectorAll('.receipt-line-item');
-    let delay = 0;
+    let index = 0;
 
     for (const line of lines) {
-      line.style.animationDelay = `${delay}ms`;
-      delay += 60;
+      line.style.setProperty('--line-index', String(index));
+      index++;
     }
+
+    this.dataset.printed = 'true';
   }
 
   /**
-   * Re-trigger print animation on specific lines (variant/qty change)
+   * Re-trigger print animation on reprintable lines (variant/qty change).
+   * Sequence: blur/slide out → typing reveal → checkmark → odometer digit roll
    */
   #reprintLines() {
     if (this.#prefersReducedMotion()) return;
@@ -98,11 +110,56 @@ class ReceiptContainer extends Component {
     const lines = this.querySelectorAll('.receipt-line-item[data-reprint]');
 
     for (const line of lines) {
-      line.style.animation = 'none';
-      /* Force reflow to restart animation */
-      void line.offsetHeight;
-      line.style.animation = '';
-      line.style.animationDelay = '0ms';
+      // Phase 1: slide out
+      line.classList.add('receipt-line-item--reprint-out');
+      line.classList.remove('receipt-line-item--reprint-in');
+    }
+
+    // Phase 2: after out animation (150ms), slide back in with typing reveal
+    setTimeout(() => {
+      for (const line of lines) {
+        line.classList.remove('receipt-line-item--reprint-out');
+        line.classList.add('receipt-line-item--reprint-in');
+      }
+
+      // Phase 3: show checkmarks after in animation (250ms)
+      setTimeout(() => {
+        for (const line of lines) {
+          const check = line.querySelector('.receipt-line__check');
+          if (check) {
+            check.style.opacity = '1';
+            // Hide checkmark after 800ms
+            setTimeout(() => {
+              check.style.opacity = '';
+            }, 800);
+          }
+        }
+
+        // Phase 4: trigger odometer digit roll on TOTAL lines
+        this.#rollOdometerDigits();
+      }, 250);
+    }, 150);
+
+    this.#announce('Receipt updated');
+  }
+
+  /**
+   * Roll odometer digits on receipt-odometer elements
+   */
+  #rollOdometerDigits() {
+    const odometers = this.querySelectorAll('receipt-odometer');
+
+    for (const odo of odometers) {
+      const digits = odo.querySelectorAll('.receipt-odometer__digit');
+      let stagger = 0;
+
+      for (const digit of digits) {
+        digit.classList.remove('receipt-odometer__digit--roll');
+        void digit.offsetHeight;
+        digit.style.setProperty('--digit-stagger', `${stagger}ms`);
+        digit.classList.add('receipt-odometer__digit--roll');
+        stagger += 50;
+      }
     }
   }
 
@@ -110,65 +167,171 @@ class ReceiptContainer extends Component {
    * Set up listeners for product variant and quantity changes
    */
   #setupEventListeners() {
-    document.addEventListener('product:variant-change', () => {
-      this.#reprintLines();
-    });
+    const { signal } = this.#abortController;
+    const section = this.closest('.shopify-section');
 
-    document.addEventListener('quantity:change', () => {
+    // Listen for variant changes via Shopify standard events
+    if (section) {
+      section.addEventListener(StandardEvents.productSelect, (event) => {
+        /** @type {ProductSelectEvent} */ (event).promise
+          ?.then(() => {
+            this.#reprintLines();
+          })
+          .catch((err) => {
+            if (err?.name !== 'AbortError') console.warn('[receipt] variant promise rejected:', err);
+          });
+      }, { signal });
+    }
+
+    // Listen for quantity changes
+    document.addEventListener(ThemeEvents.quantitySelectorUpdate, (event) => {
+      /** @type {QuantitySelectorUpdateEvent} */
+      const qtyEvent = /** @type {*} */ (event);
+      // Ignore cart drawer quantity updates
+      if (qtyEvent.detail?.cartLine) return;
       this.#reprintLines();
-    });
+    }, { signal });
+
+    // Listen for cart add success
+    document.addEventListener(StandardEvents.cartLinesUpdate, (event) => {
+      this.dataset.state = 'printing';
+      this.#announce('Adding to cart');
+
+      /** @type {CartLinesUpdateEvent} */
+      const cartEvent = /** @type {*} */ (event);
+      if (cartEvent.promise instanceof Promise) {
+        cartEvent.promise
+          .then(() => {
+            this.dataset.state = '';
+            this.#announce('Added to cart');
+            this.#flyToCart();
+          })
+          .catch(() => {
+            this.dataset.state = 'declined';
+            this.#announce('Could not add to cart');
+            setTimeout(() => {
+              this.dataset.state = '';
+            }, 2000);
+          });
+      }
+    }, { signal });
+
+    // Listen for cart errors
+    document.addEventListener(StandardEvents.cartError, () => {
+      this.dataset.state = 'declined';
+      this.#announce('Could not add to cart');
+      setTimeout(() => {
+        this.dataset.state = '';
+      }, 2000);
+    }, { signal });
   }
 
   /**
-   * Set up tear-to-add-to-cart swipe gesture on the perforation line
+   * Set up horizontal tear-to-add-to-cart swipe gesture on the tear section
    */
   #setupTearGesture() {
-    const perforation = this.querySelector('.receipt-perforation');
-    if (!perforation) return;
+    const tearSection = this.querySelector('.receipt-tear-section');
+    if (!tearSection) return;
 
-    perforation.addEventListener('touchstart', (e) => {
-      this.#tearStartY = e.touches[0].clientY;
+    const containerWidth = () => tearSection.offsetWidth;
+
+    tearSection.addEventListener('touchstart', (e) => {
+      this.#tearStartX = e.touches[0].clientX;
       this.#isTearing = true;
-      perforation.classList.add('receipt-perforation--active');
+      tearSection.classList.add('receipt-tear-section--active');
     }, { passive: true });
 
-    perforation.addEventListener('touchmove', (e) => {
+    tearSection.addEventListener('touchmove', (e) => {
       if (!this.#isTearing) return;
 
-      const deltaY = e.touches[0].clientY - this.#tearStartY;
-      const tearProgress = Math.min(Math.max(deltaY / 80, 0), 1);
+      const deltaX = Math.abs(e.touches[0].clientX - this.#tearStartX);
+      const threshold = containerWidth() * 0.6;
+      const tearProgress = Math.min(deltaX / threshold, 1);
 
-      perforation.style.setProperty('--tear-progress', String(tearProgress));
+      tearSection.style.setProperty('--tear-progress', String(tearProgress));
 
       if (tearProgress >= 1) {
-        this.#completeTear();
+        this.#completeTear(tearSection);
       }
     }, { passive: true });
 
-    perforation.addEventListener('touchend', () => {
+    tearSection.addEventListener('touchend', () => {
       if (!this.#isTearing) return;
       this.#isTearing = false;
-      perforation.classList.remove('receipt-perforation--active');
-      perforation.style.removeProperty('--tear-progress');
+      tearSection.classList.remove('receipt-tear-section--active');
+      tearSection.style.removeProperty('--tear-progress');
     }, { passive: true });
   }
 
   /**
-   * Complete the tear gesture — find and click the ATC button
+   * Complete the tear gesture — trigger tearing animation and click ATC
+   * @param {HTMLElement} tearSection
    */
-  #completeTear() {
+  #completeTear(tearSection) {
     this.#isTearing = false;
+    tearSection.classList.remove('receipt-tear-section--active');
+    tearSection.classList.add('receipt-tear-section--tearing');
+    tearSection.style.removeProperty('--tear-progress');
+
     const atcButton = this.querySelector('[data-add-to-cart], .add-to-cart-button, button[name="add"]');
 
     if (atcButton && !atcButton.disabled) {
       atcButton.click();
     }
 
-    const perforation = this.querySelector('.receipt-perforation');
-    if (perforation) {
-      perforation.classList.remove('receipt-perforation--active');
-      perforation.style.removeProperty('--tear-progress');
-    }
+    // Reset tearing class after animation
+    setTimeout(() => {
+      tearSection.classList.remove('receipt-tear-section--tearing');
+    }, 400);
+  }
+
+  /**
+   * Create fly-to-cart ghost animation from receipt to cart icon
+   */
+  #flyToCart() {
+    if (this.#prefersReducedMotion()) return;
+
+    const cartIcon = document.querySelector('.header-actions__cart-icon');
+    const receiptPaper = this.querySelector('.receipt-paper');
+    if (!cartIcon || !receiptPaper) return;
+
+    const ghost = document.createElement('div');
+    ghost.className = 'receipt-fly-ghost';
+
+    const receiptRect = receiptPaper.getBoundingClientRect();
+    const cartRect = cartIcon.getBoundingClientRect();
+
+    ghost.style.cssText = `
+      position: fixed;
+      top: ${receiptRect.top}px;
+      left: ${receiptRect.left}px;
+      width: ${receiptRect.width}px;
+      height: ${Math.min(receiptRect.height, 120)}px;
+      --fly-dx: ${cartRect.left - receiptRect.left}px;
+      --fly-dy: ${cartRect.top - receiptRect.top}px;
+      z-index: 9999;
+      pointer-events: none;
+    `;
+
+    document.body.appendChild(ghost);
+
+    onAnimationEnd([ghost]).then(() => {
+      ghost.remove();
+    });
+  }
+
+  /**
+   * Announce a message to screen readers via the aria-live region
+   * @param {string} message
+   */
+  #announce(message) {
+    const announcer = this.refs.receiptAnnouncer;
+    if (!announcer) return;
+    announcer.textContent = '';
+    // Delay to ensure the AT picks up the change
+    requestAnimationFrame(() => {
+      announcer.textContent = message;
+    });
   }
 
   /**
@@ -194,13 +357,16 @@ class ReceiptContainer extends Component {
   }
 }
 
-customElements.define('receipt-container', ReceiptContainer);
+if (!customElements.get('receipt-container')) {
+  customElements.define('receipt-container', ReceiptContainer);
+}
 
 /**
  * Receipt Progress Bar
  *
- * Renders a block-character (▓░) progress bar that updates
- * when cart totals or variant prices change.
+ * Renders a block-character (▓░) progress bar with per-character
+ * stagger animation. Each character gets its own <span> with a
+ * --char-index CSS variable for animation delay.
  *
  * @extends {Component}
  */
@@ -216,7 +382,7 @@ class ReceiptProgressBar extends Component {
   }
 
   /**
-   * Render the block-character progress bar
+   * Render the block-character progress bar with individual character spans
    */
   #render() {
     const threshold = Number(this.dataset.threshold) || 0;
@@ -226,15 +392,19 @@ class ReceiptProgressBar extends Component {
 
     const progress = Math.min(projected / threshold, 1);
     const filled = Math.round(progress * this.#totalChars);
-    const empty = this.#totalChars - filled;
 
-    const barEl = this.refs.progressBar;
+    const barEl = this.refs.progressBar || this.refs.barOutput;
     if (!barEl) return;
 
-    const filledStr = '▓'.repeat(filled);
-    const emptyStr = '░'.repeat(empty);
+    let html = '';
 
-    barEl.innerHTML = `<span class="receipt-progress__filled">${filledStr}</span><span class="receipt-progress__empty">${emptyStr}</span>`;
+    for (let i = 0; i < this.#totalChars; i++) {
+      const char = i < filled ? '▓' : '░';
+      const filledClass = i < filled ? ' receipt-progress__char--filled' : '';
+      html += `<span class="receipt-progress__char${filledClass}" style="--char-index: ${i}">${char}</span>`;
+    }
+
+    barEl.innerHTML = html;
 
     const pctEl = this.refs.progressPct;
     if (pctEl) {
@@ -243,4 +413,36 @@ class ReceiptProgressBar extends Component {
   }
 }
 
-customElements.define('receipt-progress-bar', ReceiptProgressBar);
+if (!customElements.get('receipt-progress-bar')) {
+  customElements.define('receipt-progress-bar', ReceiptProgressBar);
+}
+
+/**
+ * Receipt Odometer
+ *
+ * Wraps a price value and applies a digit-roll animation when the
+ * content changes. Each digit gets a separate span for staggered animation.
+ *
+ * @extends {Component}
+ */
+class ReceiptOdometer extends Component {
+  /** @type {MutationObserver|null} */
+  #mutationObserver = null;
+
+  /** @type {string} */
+  #lastValue = '';
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.#lastValue = this.textContent?.trim() || '';
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.#mutationObserver?.disconnect();
+  }
+}
+
+if (!customElements.get('receipt-odometer')) {
+  customElements.define('receipt-odometer', ReceiptOdometer);
+}
