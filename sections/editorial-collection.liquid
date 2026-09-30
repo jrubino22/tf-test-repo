@@ -1,0 +1,436 @@
+<script
+  src="{{ 'results-list.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+<script
+  src="{{ 'editorial-collection.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% javascript %}
+  const url = new URL(window.location.href);
+  if (url.hash) {
+    document.addEventListener(
+      'DOMContentLoaded',
+      () => {
+        const card = document.getElementById(url.hash.slice(1));
+        if (card) {
+          card.scrollIntoView({ behavior: 'instant' });
+        }
+      },
+      { once: true }
+    );
+  }
+{% endjavascript %}
+
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
+  endif
+
+  assign products_per_page = 24
+  if section.settings.enable_infinite_scroll == false
+    assign products_per_page = section.settings.products_per_page
+  endif
+
+  assign grid_module_size = section.settings.grid_module_size | default: 7
+  assign interstitial_enabled = section.settings.interstitial_enabled
+  assign interstitial_interval = section.settings.interstitial_interval | default: 6
+
+  assign show_card_index = section.settings.show_card_index
+  assign card_title_font = section.settings.card_title_font | default: 'heading'
+  assign card_price_font = section.settings.card_price_font | default: 'subheading'
+  assign card_title_case = section.settings.card_title_case | default: 'none'
+  assign card_price_case = section.settings.card_price_case | default: 'uppercase'
+%}
+
+{% render 'editorial-grid-styles' %}
+{% render 'collection-wrapper-styles' %}
+
+{% style %}
+  .editorial-collection--{{ section.id }} {
+    --editorial-padding-block-start: {{ section.settings.padding-block-start }}px;
+    --editorial-padding-block-end: {{ section.settings.padding-block-end }}px;
+    --editorial-grid-gap: 20px;
+    --editorial-grid-gap-mobile: 10px;
+  }
+
+  /* Card typography overrides */
+  .editorial-collection--{{ section.id }} .editorial-grid__item .product-card .text-block {
+    font-family: var(--font-{{ card_title_font }}--family);
+    text-transform: {{ card_title_case }};
+  }
+
+  .editorial-collection--{{ section.id }} .editorial-grid__item .product-card .price {
+    font-family: var(--font-{{ card_price_font }}--family);
+    text-transform: {{ card_price_case }};
+  }
+{% endstyle %}
+
+<div
+  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+></div>
+{% # theme-check-disable-next-line UnknownFilter %}
+<collection-component view-event-payload="{{ collection | standard_event_data: 'view' | escape }}">
+  <results-list
+    class="editorial-collection editorial-collection--{{ section.id }}{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+    section-id="{{ section.id }}"
+    infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
+  >
+    {% render 'skip-to-content-link', href: '#EditorialGrid', text: 'accessibility.skip_to_results_list' %}
+
+    <div class="editorial-collection__inner collection-wrapper grid gap-style">
+      {% content_for 'block',
+        type: 'filters',
+        id: 'filters',
+        results: collection,
+        results_size: collection.products_count
+      %}
+
+      {% paginate collection.products by products_per_page %}
+        {% if collection.products.size == 0 %}
+          {% render 'product-card-styles' %}
+          {% render 'text-block-styles' %}
+          {% render 'price-styles' %}
+          <div class="editorial-empty">
+            <h2 class="editorial-empty__heading">Nothing here yet</h2>
+            <p class="editorial-empty__text">
+              Try adjusting your filters or browse the full collection to find what you're looking for.
+            </p>
+            <a href="{{ collection.url }}" class="editorial-empty__link">
+              View all products
+            </a>
+          </div>
+        {% else %}
+          {% if section.settings.enable_infinite_scroll %}
+            <span ref="viewMorePrevious"></span>
+          {% endif %}
+
+          <ul
+            id="EditorialGrid"
+            class="editorial-grid"
+            ref="grid"
+            role="list"
+            data-last-page="{{ paginate.pages }}"
+          >
+            {% assign interstitial_count = 0 %}
+            {% for product in collection.products %}
+              {% comment %}
+                Determine card size based on position in the repeating grid module.
+                Module pattern (default 7):
+                  0 = feature (large 4-col portrait)
+                  1 = standard (2-col square)
+                  2 = standard (2-col square)
+                  3 = portrait (2-col tall)
+                  4 = standard (2-col square)
+                  5 = standard (2-col square)
+                  6 = spread (full-width landscape)
+              {% endcomment %}
+              {% assign mod = forloop.index0 | modulo: grid_module_size %}
+              {% assign size_class = 'standard' %}
+              {% if mod == 0 %}
+                {% assign size_class = 'feature' %}
+              {% elsif mod == 3 %}
+                {% assign size_class = 'portrait' %}
+              {% elsif mod == 6 %}
+                {% assign size_class = 'spread' %}
+              {% endif %}
+
+              {% comment %} Calculate stagger delay for scroll reveal {% endcomment %}
+              {% assign stagger_group_pos = forloop.index0 | modulo: 6 %}
+              {% assign stagger_delay = stagger_group_pos | times: 80 %}
+
+              <li
+                id="{{ section.id }}-{{ product.id }}"
+                class="editorial-grid__item editorial-grid__item--{{ size_class }}{% if show_card_index %} editorial-grid__item--show-index{% endif %} editorial-reveal"
+                ref="cards[]"
+                data-page="{{ paginate.current_page }}"
+                data-product-id="{{ product.id }}"
+                style="--reveal-delay: {{ stagger_delay }}ms"
+              >
+                <span class="editorial-card__index" aria-hidden="true"></span>
+                {% content_for 'block',
+                  type: '_product-card',
+                  id: 'product-card',
+                  closest.product: product,
+                  product_view_context: 'collection'
+                %}
+              </li>
+
+              {% comment %} Insert interstitial after every N products {% endcomment %}
+              {% if interstitial_enabled and forloop.index > 0 %}
+                {% assign interstitial_check = forloop.index | modulo: interstitial_interval %}
+                {% if interstitial_check == 0 and forloop.last == false %}
+                  {% assign interstitial_count = interstitial_count | plus: 1 %}
+                  {% assign interstitial_type = interstitial_count | modulo: 2 %}
+
+                  <li class="editorial-grid__interstitial editorial-reveal" aria-hidden="true">
+                    {% if interstitial_type == 1 %}
+                      {% comment %} Odd interstitials: quote 1 + image 1 {% endcomment %}
+                      {% if section.settings.interstitial_image != blank %}
+                        <div class="editorial-interstitial--with-image">
+                          {% if section.settings.interstitial_quote != blank %}
+                            <blockquote class="editorial-interstitial__quote">
+                              {{ section.settings.interstitial_quote }}
+                            </blockquote>
+                          {% endif %}
+                          {{
+                            section.settings.interstitial_image
+                            | image_url: width: section.settings.interstitial_image.width
+                            | image_tag:
+                              sizes: '(min-width: 750px) 50vw, 100vw',
+                              widths: '375,550,750,1100',
+                              loading: 'lazy',
+                              class: 'editorial-interstitial__image',
+                              alt: section.settings.interstitial_quote
+                          }}
+                        </div>
+                      {% elsif section.settings.interstitial_quote != blank %}
+                        <blockquote class="editorial-interstitial__quote">
+                          {{ section.settings.interstitial_quote }}
+                        </blockquote>
+                      {% endif %}
+                    {% else %}
+                      {% comment %} Even interstitials: quote 2 + image 2 (fallback to 1 if empty) {% endcomment %}
+                      {% assign q2 = section.settings.interstitial_quote_2 | default: section.settings.interstitial_quote %}
+                      {% assign img2 = section.settings.interstitial_image_2 | default: section.settings.interstitial_image %}
+                      {% if img2 != blank %}
+                        <div class="editorial-interstitial--with-image">
+                          {% if q2 != blank %}
+                            <blockquote class="editorial-interstitial__quote">
+                              {{ q2 }}
+                            </blockquote>
+                          {% endif %}
+                          {{
+                            img2
+                            | image_url: width: img2.width
+                            | image_tag:
+                              sizes: '(min-width: 750px) 50vw, 100vw',
+                              widths: '375,550,750,1100',
+                              loading: 'lazy',
+                              class: 'editorial-interstitial__image',
+                              alt: q2
+                          }}
+                        </div>
+                      {% elsif q2 != blank %}
+                        <blockquote class="editorial-interstitial__quote">
+                          {{ q2 }}
+                        </blockquote>
+                      {% endif %}
+                    {% endif %}
+                  </li>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </ul>
+
+          {% if section.settings.enable_infinite_scroll %}
+            <span ref="viewMoreNext" class="editorial-collection__view-more"></span>
+          {% else %}
+            {% if paginate.pages > 1 %}
+              <nav class="editorial-pagination" aria-label="Pagination">
+                {% if paginate.previous %}
+                  <a
+                    href="{{ paginate.previous.url }}"
+                    class="editorial-pagination__link"
+                    aria-label="Previous page"
+                  >
+                    &larr; Previous
+                  </a>
+                {% else %}
+                  <span class="editorial-pagination__link editorial-pagination__link--disabled" aria-disabled="true">
+                    &larr; Previous
+                  </span>
+                {% endif %}
+
+                <span class="editorial-pagination__indicator">
+                  Page {{ paginate.current_page }} of {{ paginate.pages }}
+                </span>
+
+                {% if paginate.next %}
+                  <a
+                    href="{{ paginate.next.url }}"
+                    class="editorial-pagination__link"
+                    aria-label="Next page"
+                  >
+                    Next &rarr;
+                  </a>
+                {% else %}
+                  <span class="editorial-pagination__link editorial-pagination__link--disabled" aria-disabled="true">
+                    Next &rarr;
+                  </span>
+                {% endif %}
+              </nav>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      {% endpaginate %}
+    </div>
+  </results-list>
+</collection-component>
+
+{% schema %}
+{
+  "name": "Editorial collection",
+  "enabled_on": {
+    "templates": ["collection"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Grid"
+    },
+    {
+      "type": "number",
+      "id": "grid_module_size",
+      "label": "Products per pattern cycle",
+      "default": 7
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_infinite_scroll",
+      "label": "Auto load products",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 8,
+      "max": 36,
+      "step": 4,
+      "default": 24,
+      "visible_if": "{{ section.settings.enable_infinite_scroll == false }}"
+    },
+    {
+      "type": "header",
+      "content": "Interstitials"
+    },
+    {
+      "type": "checkbox",
+      "id": "interstitial_enabled",
+      "label": "Enable interstitials",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "interstitial_interval",
+      "label": "Products between each",
+      "default": 6
+    },
+    {
+      "type": "textarea",
+      "id": "interstitial_quote",
+      "label": "Pull quote 1",
+      "default": "\"Style is a way to say who you are without having to speak.\""
+    },
+    {
+      "type": "image_picker",
+      "id": "interstitial_image",
+      "label": "Image 1"
+    },
+    {
+      "type": "textarea",
+      "id": "interstitial_quote_2",
+      "label": "Pull quote 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "interstitial_image_2",
+      "label": "Image 2"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "select",
+      "id": "card_title_font",
+      "label": "Card title font",
+      "options": [
+        { "value": "heading", "label": "Heading" },
+        { "value": "body", "label": "Body" },
+        { "value": "accent", "label": "Accent" },
+        { "value": "subheading", "label": "Subheading" }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "card_price_font",
+      "label": "Card price font",
+      "options": [
+        { "value": "heading", "label": "Heading" },
+        { "value": "body", "label": "Body" },
+        { "value": "accent", "label": "Accent" },
+        { "value": "subheading", "label": "Subheading" }
+      ],
+      "default": "subheading"
+    },
+    {
+      "type": "select",
+      "id": "card_title_case",
+      "label": "Card title case",
+      "options": [
+        { "value": "none", "label": "Default" },
+        { "value": "uppercase", "label": "Uppercase" },
+        { "value": "lowercase", "label": "Lowercase" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "card_price_case",
+      "label": "Card price case",
+      "options": [
+        { "value": "none", "label": "Default" },
+        { "value": "uppercase", "label": "Uppercase" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_card_index",
+      "label": "Show card index numbers",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top padding",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 32
+    }
+  ],
+  "presets": []
+}
+{% endschema %}

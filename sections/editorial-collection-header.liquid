@@ -1,0 +1,326 @@
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
+  endif
+
+  assign has_image = false
+  if collection.image != blank
+    assign has_image = true
+  endif
+
+  assign image_position = section.settings.image_position | default: 'left'
+  assign title_size_class = 'editorial-header__title--' | append: section.settings.title_size
+%}
+
+<section
+  class="editorial-header{% if has_image %} editorial-header--has-image editorial-header--image-{{ image_position }}{% endif %}{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  style="
+    --editorial-header-padding-top: {{ section.settings.padding-block-start }}px;
+    --editorial-header-padding-bottom: {{ section.settings.padding-block-end }}px;
+    --editorial-header-description-max-width: {{ section.settings.description_max_width }}px;
+  "
+>
+  {% if has_image %}
+    <div class="editorial-header__image-area">
+      <div class="editorial-header__image-wrapper">
+        {% liquid
+          assign sizes_val = '(min-width: 990px) 55vw, 100vw'
+        %}
+        {{
+          collection.image
+          | image_url: width: collection.image.width
+          | image_tag:
+            sizes: sizes_val,
+            widths: '375,550,750,1100,1500,1780',
+            loading: 'eager',
+            fetchpriority: 'high',
+            class: 'editorial-header__image',
+            alt: collection.title
+        }}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="editorial-header__content">
+    <h1 class="editorial-header__title {{ title_size_class }}">
+      {{ collection.title }}
+    </h1>
+
+    {% if collection.description != blank %}
+      <div class="editorial-header__description">
+        {{ collection.description }}
+      </div>
+    {% endif %}
+
+    {% if section.settings.show_product_count %}
+      {% assign product_count_label = section.settings.product_count_label | default: 'Pieces' %}
+      <p class="editorial-header__count">
+        {{ collection.products_count }} {{ product_count_label }}
+      </p>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .editorial-header {
+    display: flex;
+    flex-direction: column;
+    padding-block-start: var(--editorial-header-padding-top, 48px);
+    padding-block-end: var(--editorial-header-padding-bottom, 48px);
+    padding-inline: var(--page-margin);
+    overflow: hidden;
+  }
+
+  /* Two-area grid on desktop when image is present */
+  .editorial-header--has-image {
+    @media screen and (min-width: 990px) {
+      display: grid;
+      grid-template-columns: 55% 45%;
+      gap: 0;
+      align-items: center;
+      min-height: 420px;
+    }
+  }
+
+  .editorial-header--has-image.editorial-header--image-right {
+    @media screen and (min-width: 990px) {
+      grid-template-columns: 45% 55%;
+    }
+  }
+
+  /* Image area */
+  .editorial-header__image-area {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .editorial-header--image-right .editorial-header__image-area {
+    @media screen and (min-width: 990px) {
+      order: 2;
+    }
+  }
+
+  .editorial-header__image-wrapper {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+
+    @media screen and (min-width: 990px) {
+      aspect-ratio: auto;
+      height: 100%;
+      /* Artistic offset — image shifts slightly for visual interest */
+      transform: scale(1.05) translateX(5%);
+    }
+  }
+
+  .editorial-header--image-right .editorial-header__image-wrapper {
+    @media screen and (min-width: 990px) {
+      transform: scale(1.05) translateX(-5%);
+    }
+  }
+
+  .editorial-header__image-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 40%,
+      rgb(var(--color-background-rgb, 255 255 255) / 0.6) 100%
+    );
+
+    @media screen and (min-width: 990px) {
+      background: linear-gradient(
+        to right,
+        rgb(var(--color-background-rgb, 255 255 255) / 0.5) 0%,
+        transparent 50%
+      );
+    }
+  }
+
+  .editorial-header--image-right .editorial-header__image-wrapper::after {
+    @media screen and (min-width: 990px) {
+      background: linear-gradient(
+        to left,
+        rgb(var(--color-background-rgb, 255 255 255) / 0.5) 0%,
+        transparent 50%
+      );
+    }
+  }
+
+  .editorial-header__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Content area */
+  .editorial-header__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+    padding-block: var(--padding-xl);
+    position: relative;
+    z-index: 1;
+
+    @media screen and (min-width: 990px) {
+      padding-inline: var(--padding-3xl);
+      padding-block: var(--padding-2xl);
+      /* Overlap onto image area for editorial effect */
+      margin-inline-start: -3rem;
+    }
+  }
+
+  .editorial-header--image-right .editorial-header__content {
+    @media screen and (min-width: 990px) {
+      margin-inline-start: 0;
+      margin-inline-end: -3rem;
+    }
+  }
+
+  /* Title */
+  .editorial-header__title {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .editorial-header__title--large {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  .editorial-header__title--extra-large {
+    font-size: clamp(3rem, 8vw, 7rem);
+  }
+
+  /* Description */
+  .editorial-header__description {
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--md);
+    line-height: 1.6;
+    max-width: var(--editorial-header-description-max-width, 600px);
+    color: rgb(var(--color-foreground-rgb) / 0.8);
+  }
+
+  .editorial-header__description :is(p, ul, ol) {
+    margin: 0;
+  }
+
+  /* Product count / issue label */
+  .editorial-header__count {
+    font-family: var(--font-subheading--family);
+    font-weight: var(--font-subheading--weight);
+    font-size: var(--font-size--3xs);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-variant: small-caps;
+    color: rgb(var(--color-foreground-rgb) / 0.55);
+    margin: 0;
+  }
+
+  /* Mobile stacking adjustments */
+  @media screen and (max-width: 989px) {
+    .editorial-header__content {
+      padding-inline: 0;
+    }
+
+    .editorial-header--has-image .editorial-header__content {
+      margin-block-start: calc(-1 * var(--padding-xl));
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Editorial header",
+  "tag": "div",
+  "enabled_on": {
+    "templates": ["collection"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Image position",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "title_size",
+      "label": "Title size",
+      "options": [
+        { "value": "large", "label": "Large" },
+        { "value": "extra-large", "label": "Extra large" }
+      ],
+      "default": "extra-large"
+    },
+    {
+      "type": "number",
+      "id": "description_max_width",
+      "label": "Description max width",
+      "default": 600
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_count",
+      "label": "Show product count",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "product_count_label",
+      "label": "Product count label",
+      "default": "Pieces"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Editorial collection header"
+    }
+  ]
+}
+{% endschema %}
