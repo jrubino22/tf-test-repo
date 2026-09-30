@@ -9,20 +9,21 @@
  */
 {
   "sections": {
-    "editorial-header": {
-      "type": "editorial-collection-header",
+    "collection-header": {
+      "type": "collection-header",
       "settings": {
         "image_position": "left",
         "title_size": "extra-large",
         "description_max_width": 600,
         "show_product_count": true,
         "product_count_label": "Pieces",
+        "enable_animations": true,
         "padding-block-start": 80,
         "padding-block-end": 48
       }
     },
-    "editorial-main": {
-      "type": "editorial-collection",
+    "main": {
+      "type": "main-collection",
       "blocks": {
         "filters": {
           "type": "filters",
@@ -152,13 +153,15 @@
         "card_title_case": "none",
         "card_price_case": "uppercase",
         "show_card_index": true,
+        "enable_animations": true,
+        "animation_intensity": "subtle",
         "padding-block-start": 0,
         "padding-block-end": 32
       }
     }
   },
   "order": [
-    "editorial-header",
-    "editorial-main"
+    "collection-header",
+    "main"
   ]
 }
