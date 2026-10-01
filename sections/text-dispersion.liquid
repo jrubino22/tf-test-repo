@@ -1,0 +1,314 @@
+<script
+  src="{{ 'text-dispersion.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
+  endif
+%}
+
+<div
+  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+></div>
+<text-dispersion-section
+  class="section section--{{ section.settings.section_width }} spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  style="
+    {%- render 'spacing-style', settings: section.settings %};
+    --dispersion-gap: {{ section.settings.gap }}px;
+    --dispersion-alignment: {{ section.settings.text_alignment }};
+    {% if section.settings.section_height == 'medium' %}
+      --section-min-height: var(--section-height-medium);
+    {% elsif section.settings.section_height == 'large' %}
+      --section-min-height: var(--section-height-large);
+    {% endif %}
+  "
+>
+  <div class="text-dispersion__container">
+    {% for block in section.blocks %}
+      {% liquid
+        assign words = block.settings.text | split: ' '
+        assign font_class = 'text-dispersion__line--heading'
+        if block.settings.font == 'accent'
+          assign font_class = 'text-dispersion__line--accent'
+        elsif block.settings.font == 'body'
+          assign font_class = 'text-dispersion__line--body'
+        endif
+
+        assign size_class = 'text-dispersion__line--display'
+        if block.settings.size_preset == 'heading'
+          assign size_class = 'text-dispersion__line--heading-size'
+        elsif block.settings.size_preset == 'body'
+          assign size_class = 'text-dispersion__line--body-size'
+        endif
+      %}
+      <div
+        class="text-dispersion__line {{ font_class }} {{ size_class }}"
+        ref="lines[]"
+        {{ block.shopify_attributes }}
+      >
+        {% for word in words %}
+          <span class="text-dispersion__word">{{ word }}</span>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+</text-dispersion-section>
+
+{% stylesheet %}
+  text-dispersion-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--section-min-height, auto);
+  }
+
+  .text-dispersion__container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dispersion-gap, 16px);
+    align-items: var(--dispersion-alignment, center);
+    width: 100%;
+  }
+
+  .text-dispersion__line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em;
+    justify-content: var(--dispersion-alignment, center);
+    line-height: 1.1;
+  }
+
+  .text-dispersion__word {
+    display: inline-block;
+    will-change: transform, opacity;
+    opacity: 0;
+    transform:
+      translate(var(--disperse-x, 0px), var(--disperse-y, 0px))
+      rotate(var(--disperse-r, 0deg));
+  }
+
+  /* Font families */
+  .text-dispersion__line--heading {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+  }
+
+  .text-dispersion__line--accent {
+    font-family: var(--font-accent--family);
+    font-weight: var(--font-accent--weight);
+    font-style: var(--font-accent--style, italic);
+  }
+
+  .text-dispersion__line--body {
+    font-family: var(--font-body--family);
+    font-weight: var(--font-body--weight);
+  }
+
+  /* Size presets */
+  .text-dispersion__line--display {
+    font-size: var(--font-size--3xl);
+
+    @media screen and (min-width: 750px) {
+      font-size: var(--font-size--5xl);
+    }
+  }
+
+  .text-dispersion__line--heading-size {
+    font-size: var(--font-size--xl);
+
+    @media screen and (min-width: 750px) {
+      font-size: var(--font-size--3xl);
+    }
+  }
+
+  .text-dispersion__line--body-size {
+    font-size: var(--font-size--base);
+
+    @media screen and (min-width: 750px) {
+      font-size: var(--font-size--lg);
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .text-dispersion__word {
+      opacity: 1;
+      transform: none;
+      will-change: auto;
+    }
+  }
+
+  /* Mobile */
+  @media screen and (max-width: 749px) {
+    .text-dispersion__container {
+      padding-inline: 0.5rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Text dispersion",
+  "tag": "section",
+  "class": "section-wrapper",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "blocks": [
+    {
+      "type": "text-line",
+      "name": "Text line",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Your text here"
+        },
+        {
+          "type": "select",
+          "id": "size_preset",
+          "label": "Size",
+          "options": [
+            { "value": "display", "label": "Display" },
+            { "value": "heading", "label": "Heading" },
+            { "value": "body", "label": "Body" }
+          ],
+          "default": "display"
+        },
+        {
+          "type": "select",
+          "id": "font",
+          "label": "Font",
+          "options": [
+            { "value": "heading", "label": "Heading" },
+            { "value": "accent", "label": "Accent" },
+            { "value": "body", "label": "Body" }
+          ],
+          "default": "heading"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "flex-start", "label": "Left" },
+        { "value": "center", "label": "Center" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Line gap",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "section_height",
+      "label": "Section height",
+      "options": [
+        { "value": "auto", "label": "Auto" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "large"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "placeholder": "t:settings.default"
+    },
+    {
+      "type": "header",
+      "content": "Size"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Width",
+      "options": [
+        { "value": "page-width", "label": "Page" },
+        { "value": "full-width", "label": "Full" }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 80,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Text dispersion",
+      "category": "Story",
+      "blocks": [
+        {
+          "type": "text-line",
+          "settings": {
+            "text": "Designed with intention.",
+            "size_preset": "display",
+            "font": "heading"
+          }
+        },
+        {
+          "type": "text-line",
+          "settings": {
+            "text": "Built to last.",
+            "size_preset": "display",
+            "font": "accent"
+          }
+        },
+        {
+          "type": "text-line",
+          "settings": {
+            "text": "Made for you.",
+            "size_preset": "display",
+            "font": "heading"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

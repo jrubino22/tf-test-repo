@@ -1,0 +1,294 @@
+<script
+  src="{{ 'scroll-narrative.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  assign chapter_count = section.blocks.size
+%}
+
+<scroll-narrative-section
+  class="section section--{{ section.settings.section_width }} spacing-style"
+  style="
+    {%- render 'spacing-style', settings: section.settings %};
+    --scroll-narrative-chapter-count: {{ chapter_count }};
+    --scroll-narrative-chapter-height: {{ section.settings.section_height_multiplier }}vh;
+  "
+>
+  {% if chapter_count > 0 %}
+    <div
+      class="scroll-narrative__stage"
+      ref="stage"
+    >
+      {% for block in section.blocks %}
+        <div
+          class="scroll-narrative__panel"
+          ref="panels[]"
+          data-bg-color="{{ block.settings.background_color }}"
+          {{ block.shopify_attributes }}
+        >
+          {% if block.settings.background_color != blank %}
+            {% render 'contrast-override',
+              background_color: block.settings.background_color,
+              text_color: block.settings.text_color,
+              section_id: block.id
+            %}
+          {% elsif block.settings.text_color != blank %}
+            {% render 'contrast-override',
+              text_color: block.settings.text_color,
+              section_id: block.id
+            %}
+          {% endif %}
+          <div class="scroll-narrative__panel-content{% if block.settings.background_color != blank or block.settings.text_color != blank %} color-custom-{{ block.id }}{% endif %}">
+            {% if block.settings.heading != blank %}
+              <div class="scroll-narrative__heading text-block">
+                {{ block.settings.heading }}
+              </div>
+            {% endif %}
+            {% if block.settings.body != blank %}
+              <div class="scroll-narrative__body text-block">
+                {{ block.settings.body }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="scroll-narrative__empty">
+      <p>Add chapter blocks to create a scroll narrative.</p>
+    </div>
+  {% endif %}
+</scroll-narrative-section>
+
+{% stylesheet %}
+  scroll-narrative-section {
+    display: block;
+    position: relative;
+    height: calc(var(--scroll-narrative-chapter-count, 1) * var(--scroll-narrative-chapter-height, 100vh));
+    overflow: visible;
+  }
+
+  .scroll-narrative__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.6s ease;
+  }
+
+  .scroll-narrative__panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    will-change: transform, opacity;
+    pointer-events: none;
+  }
+
+  .scroll-narrative__panel-content {
+    max-width: 48rem;
+    padding-inline: var(--padding-inline-start, 1.5rem);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .scroll-narrative__heading {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+  }
+
+  .scroll-narrative__heading h2,
+  .scroll-narrative__heading h3 {
+    margin: 0;
+  }
+
+  .scroll-narrative__body {
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--base);
+    line-height: var(--line-height--body-loose);
+    max-width: 36rem;
+  }
+
+  .scroll-narrative__body p {
+    margin: 0;
+  }
+
+  .scroll-narrative__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    color: var(--color-foreground-muted);
+    font-family: var(--font-body--family);
+  }
+
+  /* Reduced motion: stack panels vertically */
+  @media (prefers-reduced-motion: reduce) {
+    scroll-narrative-section {
+      height: auto;
+    }
+
+    .scroll-narrative__stage {
+      position: relative;
+      height: auto;
+      flex-direction: column;
+    }
+
+    .scroll-narrative__panel {
+      position: relative;
+      opacity: 1;
+      padding-block: 4rem;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .scroll-narrative__panel-content {
+      padding-inline: 1.25rem;
+    }
+
+    .scroll-narrative__heading h2,
+    .scroll-narrative__heading h3 {
+      font-size: var(--font-size--xl);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Scroll narrative",
+  "tag": "section",
+  "class": "section-wrapper",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "blocks": [
+    {
+      "type": "chapter",
+      "name": "Chapter",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "richtext",
+          "id": "body",
+          "label": "Body"
+        },
+        {
+          "type": "header",
+          "content": "Appearance"
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Background color"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Text color"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "section_height_multiplier",
+      "label": "Scroll length",
+      "min": 100,
+      "max": 200,
+      "step": 10,
+      "default": 100,
+      "unit": "vh",
+      "info": "Scroll distance per chapter"
+    },
+    {
+      "type": "header",
+      "content": "Size"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Width",
+      "options": [
+        { "value": "page-width", "label": "Page" },
+        { "value": "full-width", "label": "Full" }
+      ],
+      "default": "full-width"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 0,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Scroll narrative",
+      "category": "Story",
+      "blocks": [
+        {
+          "type": "chapter",
+          "settings": {
+            "heading": "<h3>Our Beginning</h3>",
+            "body": "<p>Every product starts with a question: does this need to exist? We founded this brand on the belief that less, done better, is more.</p>",
+            "background_color": "#f5f0eb"
+          }
+        },
+        {
+          "type": "chapter",
+          "settings": {
+            "heading": "<h3>Our Process</h3>",
+            "body": "<p>From sketch to stitch, every detail is considered. We work with artisans who share our obsession with craft, using materials that age beautifully.</p>",
+            "background_color": "#e8e2da"
+          }
+        },
+        {
+          "type": "chapter",
+          "settings": {
+            "heading": "<h3>Our Promise</h3>",
+            "body": "<p>We believe great design should be felt, not explained. Each piece is a quiet statement — built to become part of your story.</p>",
+            "background_color": "#dbd4ca"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
