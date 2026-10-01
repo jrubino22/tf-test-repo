@@ -72,6 +72,7 @@ class StickyAddToCartComponent extends Component {
   connectedCallback() {
     super.connectedCallback();
 
+    this.#detectReceiptMode();
     this.#setupIntersectionObserver();
 
     const { signal } = this.#abortController;
@@ -335,6 +336,21 @@ class StickyAddToCartComponent extends Component {
   }
 
   // Helper methods
+  /**
+   * Detects if the product details section is in receipt mode
+   * by looking for a receipt-container element in the same shopify-section.
+   * Sets a data attribute so CSS can target the sticky bar without :has().
+   */
+  #detectReceiptMode() {
+    const section = this.closest('.shopify-section');
+    if (!section) return;
+
+    const receiptContainer = section.querySelector('receipt-container');
+    if (receiptContainer) {
+      this.dataset.receiptMode = 'true';
+    }
+  }
+
   /**
    * Checks whether the Shopify Chat is active on the page.
    * When active, the sticky bar must stay hidden to avoid overlapping the chat UI.

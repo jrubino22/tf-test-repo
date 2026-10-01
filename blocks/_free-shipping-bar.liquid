@@ -1,0 +1,225 @@
+{% render 'premium-buy-box-styles' %}
+
+<script src="{{ 'free-shipping-bar.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+{%- liquid
+  assign product_resource = closest.product
+  if request.visual_preview_mode and product_resource == blank
+    assign product_resource = collections.all.products.first
+  endif
+
+  assign selected_variant = product_resource.selected_or_first_available_variant
+  assign threshold_cents = block.settings.threshold | times: 100
+  assign item_price = selected_variant.price | default: 0
+  assign cart_total = cart.total_price | default: 0
+
+  assign projected = cart_total | plus: item_price
+  assign progress = 0
+  if threshold_cents > 0
+    assign progress_raw = projected | times: 100 | divided_by: threshold_cents
+    if progress_raw > 100
+      assign progress = 100
+    else
+      assign progress = progress_raw
+    endif
+  endif
+
+  assign remaining = threshold_cents | minus: projected
+  if remaining < 0
+    assign remaining = 0
+  endif
+
+  assign is_complete = false
+  if projected >= threshold_cents
+    assign is_complete = true
+  endif
+
+  assign use_currency = false
+  if settings.currency_code_enabled_product_pages
+    assign use_currency = true
+  endif
+
+  if use_currency
+    assign formatted_remaining = remaining | money_with_currency
+  else
+    assign formatted_remaining = remaining | money
+  endif
+
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
+-%}
+
+{%- if threshold_cents > 0 -%}
+  {%- if in_receipt -%}
+    <div class="receipt-line-item" data-reprint {{ block.shopify_attributes }}>
+      {%- if is_complete -%}
+        {% render 'receipt-stamp', text: 'FREE SHIPPING', type: 'shipping' %}
+      {%- else -%}
+        {%- assign receipt_remaining_value = formatted_remaining | prepend: '-' -%}
+        {% render 'receipt-line', label: 'FREE SHIPPING', value: receipt_remaining_value %}
+        <receipt-progress-bar
+          class="receipt-progress"
+          data-threshold="{{ threshold_cents }}"
+          data-projected="{{ projected }}"
+        >
+          <span class="receipt-progress__bar" ref="progressBar" aria-label="Free shipping progress {{ progress }}%">
+            {%- assign filled_count = progress | divided_by: 5 -%}
+            {%- for i in (1..20) -%}
+              {%- assign char_index = i | minus: 1 -%}
+              {%- if i <= filled_count -%}
+                <span class="receipt-progress__char receipt-progress__char--filled" style="--char-index: {{ char_index }}">▓</span>
+              {%- else -%}
+                <span class="receipt-progress__char" style="--char-index: {{ char_index }}">░</span>
+              {%- endif -%}
+            {%- endfor -%}
+          </span>
+        </receipt-progress-bar>
+      {%- endif -%}
+    </div>
+  {%- else -%}
+    <free-shipping-bar
+      class="pbb-shipping spacing-style"
+      style="
+        {% render 'spacing-style', settings: block.settings %}
+        --pbb-shipping-progress: {{ progress | divided_by: 100.0 }};
+      "
+      data-threshold="{{ threshold_cents }}"
+      data-cart-total="{{ cart_total }}"
+      data-item-price="{{ item_price }}"
+      data-quantity="1"
+      data-money-format="{{ shop.money_format }}"
+      data-currency="{{ cart.currency.iso_code | default: shop.currency }}"
+      data-complete="{{ is_complete }}"
+      {{ block.shopify_attributes }}
+    >
+      <div class="pbb-shipping__container">
+        <div class="pbb-shipping__bar">
+          <div class="pbb-shipping__fill" ref="progressFill"></div>
+        </div>
+        <p class="pbb-shipping__text" ref="progressText">
+          {%- if is_complete -%}
+            You've unlocked free shipping!
+          {%- else -%}
+            Add {{ formatted_remaining }} more for free shipping
+          {%- endif -%}
+        </p>
+      </div>
+    </free-shipping-bar>
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .pbb-shipping {
+    display: block;
+  }
+
+  .pbb-shipping__container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2xs);
+  }
+
+  .pbb-shipping__bar {
+    position: relative;
+    height: 6px;
+    background: rgb(var(--color-foreground-rgb) / 0.08);
+    border-radius: var(--pbb-radius-pill);
+    overflow: hidden;
+  }
+
+  .pbb-shipping__fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: calc(var(--pbb-shipping-progress, 0) * 100%);
+    background: var(--pbb-success);
+    border-radius: var(--pbb-radius-pill);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbb-shipping__fill {
+      transition: width var(--pbb-speed-slow) var(--pbb-easing);
+    }
+  }
+
+  .pbb-shipping__text {
+    font-size: var(--font-paragraph-small--size, 0.8125rem);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text, 0.55));
+    margin: 0;
+  }
+
+  [data-complete="true"] .pbb-shipping__fill {
+    background: var(--pbb-success);
+  }
+
+  [data-complete="true"] .pbb-shipping__text {
+    color: var(--pbb-success);
+    font-weight: var(--font-weight-semibold, 600);
+  }
+
+  /* Receipt mode overrides */
+  receipt-container .receipt-progress__bar {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink);
+    display: block;
+    margin-block-start: var(--margin-2xs);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Free shipping bar",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Progress bar showing how close the customer is to free shipping."
+    },
+    {
+      "type": "header",
+      "content": "Configuration"
+    },
+    {
+      "type": "number",
+      "id": "threshold",
+      "label": "Free shipping threshold",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Free shipping bar",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

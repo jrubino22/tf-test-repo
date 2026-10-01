@@ -6,6 +6,12 @@
     assign product = collections.all.products.first
   endif
 
+  assign in_receipt = false
+  assign parent_block = block.parent
+  if parent_block != blank and parent_block.settings.enable_receipt
+    assign in_receipt = true
+  endif
+
   assign variant = closest.product.selected_or_first_available_variant
   assign inventory_quantity = variant.inventory_quantity
   assign inventory_policy = variant.inventory_policy
@@ -220,6 +226,13 @@
               </div>
             </volume-pricing>
           {%- endif -%}
+          {%- if in_receipt -%}
+            <div class="receipt-tear-section">
+              <hr class="receipt-perforation">
+              {%- if can_add_to_cart -%}
+                <p class="receipt-tear-hint" aria-hidden="true">TEAR TO ADD &mdash; {{ variant.price | money }}</p>
+              {%- endif -%}
+          {%- endif -%}
           {% content_for 'block',
             type: 'add-to-cart',
             id: 'add-to-cart',
@@ -233,6 +246,9 @@
             can_add_to_cart: can_add_to_cart,
             form_obj: form
           %}
+          {%- if in_receipt -%}
+            </div>
+          {%- endif -%}
         </div>
         {%- if block_settings.gift_card_form and product.gift_card? -%}
           </span>
@@ -381,6 +397,46 @@
 {% endif %}
 
 {% render 'buy-buttons-styles' %}
+
+{% stylesheet %}
+  /* Receipt mode overrides */
+  receipt-container .buy-buttons-block .button,
+  receipt-container .buy-buttons-block .shopify-payment-button__button {
+    font-family: var(--receipt-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-radius: 0;
+  }
+
+  receipt-container .buy-buttons-block .quantity-label {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .buy-buttons-block .quantity-rules {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size-sm, 0.75rem);
+    color: var(--receipt-ink-light);
+  }
+
+  receipt-container .buy-buttons-block .volume-pricing {
+    font-family: var(--receipt-mono);
+    font-size: var(--receipt-font-size, 0.8125rem);
+    color: var(--receipt-ink);
+  }
+
+  receipt-container .buy-buttons-block .volume-pricing__title {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  receipt-container .buy-buttons-block .volume-pricing__row {
+    border-color: var(--receipt-ink-faded);
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
