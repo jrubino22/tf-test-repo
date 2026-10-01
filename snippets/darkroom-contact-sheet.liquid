@@ -1,0 +1,76 @@
+{% doc %}
+  Darkroom Contact Sheet View
+
+  Dense thumbnail grid for the Darkroom collection concept.
+  Renders product images in a tight grid with frame numbers, codes,
+  grease-pencil SVG hover effect, and loupe zoom support.
+
+  @param {array} products - Paginated collection.products array (required)
+  @param {number} page_offset - Integer offset, (current_page - 1) * per_page
+
+  @example
+  {% render 'darkroom-contact-sheet', products: collection.products, page_offset: page_offset %}
+{% enddoc %}
+
+{% liquid
+  assign products = products | default: empty
+  assign page_offset = page_offset | default: 0
+%}
+
+<ul class="darkroom-sheet" id="DarkroomSheet" role="list">
+  {% for product in products %}
+    {% liquid
+      assign item_number = page_offset | plus: forloop.index
+      assign padded_number = item_number | prepend: '000' | slice: -3, 3
+
+      assign handle_prefix = product.handle | slice: 0, 2 | upcase
+      assign vendor_prefix = product.vendor | slice: 0, 2 | upcase
+      assign code_prefix = vendor_prefix | default: handle_prefix
+      assign frame_code = code_prefix | append: '-' | append: product.id
+    %}
+
+    <li
+      class="darkroom-sheet__frame"
+      data-product-id="{{ product.id }}"
+      {% if product.featured_image %}
+        data-loupe-src="{{ product.featured_image | image_url: width: 1200 }}"
+      {% endif %}
+    >
+      <a href="{{ product.url }}" class="darkroom-sheet__link">
+        {% if product.featured_image %}
+          {{ product.featured_image | image_url: width: 400 | image_tag: loading: 'lazy', alt: product.title, class: 'darkroom-sheet__image' }}
+        {% endif %}
+      </a>
+
+      {%- comment -%} Mobile zoom button {%- endcomment -%}
+      {% if product.featured_image %}
+        <button
+          type="button"
+          class="darkroom-sheet__zoom"
+          aria-label="Enlarge image of {{ product.title | escape }}"
+          data-fullscreen-src="{{ product.featured_image | image_url: width: 1200 }}"
+          data-fullscreen-alt="{{ product.title | escape }}"
+        >
+          ⌕
+        </button>
+      {% endif %}
+
+      {%- comment -%} Grease pencil SVG {%- endcomment -%}
+      <svg class="darkroom-sheet__pencil" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M 15,50 C 15,25 30,10 50,10 C 70,10 88,25 88,48 C 88,72 72,90 50,90 C 28,90 12,74 15,50 Z" />
+      </svg>
+
+      <div class="darkroom-sheet__meta">
+        <span class="darkroom-sheet__number" aria-hidden="true">{{ padded_number }}</span>
+        <span class="darkroom-sheet__code" aria-hidden="true">{{ frame_code }}</span>
+        <span class="darkroom-sheet__title">{{ product.title | escape }}</span>
+        <span class="darkroom-sheet__price">
+          {% render 'format-price', price: product.price %}
+        </span>
+      </div>
+    </li>
+  {% endfor %}
+</ul>
+
+{%- comment -%} Shared loupe element — positioned by JS {%- endcomment -%}
+<div class="darkroom-loupe" aria-hidden="true"></div>

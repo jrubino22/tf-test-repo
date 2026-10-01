@@ -5,7 +5,7 @@
 ></script>
 
 <script
-  src="{{ 'main-collection-animations.js' | asset_url }}"
+  src="{{ 'darkroom.js' | asset_url }}"
   type="module"
   fetchpriority="low"
 ></script>
@@ -31,44 +31,11 @@
     render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
   endif
 
-  assign products_per_page = 24
-  if section.settings.enable_infinite_scroll == false
-    assign products_per_page = section.settings.products_per_page
-  endif
-
-  assign grid_module_size = section.settings.grid_module_size | default: 7
-  assign interstitial_enabled = section.settings.interstitial_enabled
-  assign interstitial_interval = section.settings.interstitial_interval | default: 6
-
-  assign show_card_index = section.settings.show_card_index
-  assign card_title_font = section.settings.card_title_font | default: 'heading'
-  assign card_price_font = section.settings.card_price_font | default: 'subheading'
-  assign card_title_case = section.settings.card_title_case | default: 'none'
-  assign card_price_case = section.settings.card_price_case | default: 'uppercase'
+  assign products_per_page = section.settings.products_per_page | default: 24
 %}
 
-{% render 'editorial-grid-styles' %}
+{% render 'darkroom-styles' %}
 {% render 'collection-wrapper-styles' %}
-
-{% style %}
-  .editorial-collection--{{ section.id }} {
-    --editorial-padding-block-start: {{ section.settings.padding-block-start }}px;
-    --editorial-padding-block-end: {{ section.settings.padding-block-end }}px;
-    --editorial-grid-gap: 20px;
-    --editorial-grid-gap-mobile: 10px;
-  }
-
-  /* Card typography overrides */
-  .editorial-collection--{{ section.id }} .editorial-grid__item .product-card .text-block {
-    font-family: var(--font-{{ card_title_font }}--family);
-    text-transform: {{ card_title_case }};
-  }
-
-  .editorial-collection--{{ section.id }} .editorial-grid__item .product-card .price {
-    font-family: var(--font-{{ card_price_font }}--family);
-    text-transform: {{ card_price_case }};
-  }
-{% endstyle %}
 
 <div
   class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
@@ -76,15 +43,22 @@
 {% # theme-check-disable-next-line UnknownFilter %}
 <collection-component view-event-payload="{{ collection | standard_event_data: 'view' | escape }}">
   <results-list
-    class="editorial-collection editorial-collection--{{ section.id }}{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+    class="darkroom{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
     section-id="{{ section.id }}"
     infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
-    data-enable-animations="{{ section.settings.enable_animations }}"
-    data-animation-intensity="{{ section.settings.animation_intensity }}"
+    style="
+      --darkroom-padding-top: {{ section.settings.padding-block-start }}px;
+      --darkroom-padding-bottom: {{ section.settings.padding-block-end }}px;
+      --loupe-zoom: {{ section.settings.loupe_zoom }};
+    "
   >
-    {% render 'skip-to-content-link', href: '#EditorialGrid', text: 'accessibility.skip_to_results_list' %}
+    {% render 'skip-to-content-link', href: '#DarkroomContent', text: 'accessibility.skip_to_results_list' %}
 
-    <div class="editorial-collection__inner collection-wrapper grid gap-style">
+    <darkroom-collection
+      class="darkroom__inner collection-wrapper grid gap-style"
+      data-default-view="{{ section.settings.default_view }}"
+      data-enable-animations="{{ section.settings.enable_animations }}"
+    >
       {% content_for 'block',
         type: 'filters',
         id: 'filters',
@@ -92,17 +66,35 @@
         results_size: collection.products_count
       %}
 
+      <div class="darkroom-toolbar">
+        <div class="darkroom-toggle" role="group" aria-label="View mode">
+          <button
+            type="button"
+            class="darkroom-toggle__btn"
+            data-view="index"
+            aria-pressed="{% if section.settings.default_view == 'index' %}true{% else %}false{% endif %}"
+          >
+            Index
+          </button>
+          <button
+            type="button"
+            class="darkroom-toggle__btn"
+            data-view="sheet"
+            aria-pressed="{% if section.settings.default_view == 'sheet' %}true{% else %}false{% endif %}"
+          >
+            Contact Sheet
+          </button>
+        </div>
+      </div>
+
       {% paginate collection.products by products_per_page %}
         {% if collection.products.size == 0 %}
-          {% render 'product-card-styles' %}
-          {% render 'text-block-styles' %}
-          {% render 'price-styles' %}
-          <div class="editorial-empty">
-            <h2 class="editorial-empty__heading">Nothing here yet</h2>
-            <p class="editorial-empty__text">
+          <div class="darkroom-empty">
+            <h2 class="darkroom-empty__heading">No exposures found</h2>
+            <p class="darkroom-empty__text">
               Try adjusting your filters or browse the full collection to find what you're looking for.
             </p>
-            <a href="{{ collection.url }}" class="editorial-empty__link">
+            <a href="{{ collection.url }}" class="darkroom-empty__link">
               View all products
             </a>
           </div>
@@ -111,158 +103,50 @@
             <span ref="viewMorePrevious"></span>
           {% endif %}
 
-          <ul
-            id="EditorialGrid"
-            class="editorial-grid"
-            ref="grid"
-            role="list"
-            data-last-page="{{ paginate.pages }}"
-          >
-            {% assign interstitial_count = 0 %}
-            {% for product in collection.products %}
-              {% comment %}
-                Determine card size based on position in the repeating grid module.
-                Module pattern (default 7):
-                  0 = feature (large 4-col portrait)
-                  1 = standard (2-col square)
-                  2 = standard (2-col square)
-                  3 = portrait (2-col tall)
-                  4 = standard (2-col square)
-                  5 = standard (2-col square)
-                  6 = spread (full-width landscape)
-              {% endcomment %}
-              {% assign mod = forloop.index0 | modulo: grid_module_size %}
-              {% assign size_class = 'standard' %}
-              {% if mod == 0 %}
-                {% assign size_class = 'feature' %}
-              {% elsif mod == 3 %}
-                {% assign size_class = 'portrait' %}
-              {% elsif mod == 6 %}
-                {% assign size_class = 'spread' %}
-              {% endif %}
+          <div id="DarkroomContent" ref="grid" data-last-page="{{ paginate.pages }}">
+            {% liquid
+              assign current_page = paginate.current_page | default: 1
+              assign per_page_int = products_per_page | times: 1
+              assign page_offset = current_page | minus: 1 | times: per_page_int
+            %}
 
-              {% comment %} Calculate stagger delay for scroll reveal {% endcomment %}
-              {% assign stagger_group_pos = forloop.index0 | modulo: 6 %}
-              {% assign stagger_delay = stagger_group_pos | times: 80 %}
-
-              <li
-                id="{{ section.id }}-{{ product.id }}"
-                class="editorial-grid__item editorial-grid__item--{{ size_class }}{% if show_card_index %} editorial-grid__item--show-index{% endif %} editorial-reveal"
-                ref="cards[]"
-                data-page="{{ paginate.current_page }}"
-                data-product-id="{{ product.id }}"
-                data-card-size="{{ size_class }}"
-                style="--reveal-delay: {{ stagger_delay }}ms"
-              >
-                <span class="editorial-card__index" aria-hidden="true"></span>
-                {% content_for 'block',
-                  type: '_product-card',
-                  id: 'product-card',
-                  closest.product: product,
-                  product_view_context: 'collection'
-                %}
-              </li>
-
-              {% comment %} Insert interstitial after every N products {% endcomment %}
-              {% if interstitial_enabled and forloop.index > 0 %}
-                {% assign interstitial_check = forloop.index | modulo: interstitial_interval %}
-                {% if interstitial_check == 0 and forloop.last == false %}
-                  {% assign interstitial_count = interstitial_count | plus: 1 %}
-                  {% assign interstitial_type = interstitial_count | modulo: 2 %}
-
-                  <li class="editorial-grid__interstitial editorial-reveal" aria-hidden="true">
-                    {% if interstitial_type == 1 %}
-                      {% comment %} Odd interstitials: quote 1 + image 1 {% endcomment %}
-                      {% if section.settings.interstitial_image != blank %}
-                        <div class="editorial-interstitial--with-image">
-                          {% if section.settings.interstitial_quote != blank %}
-                            <blockquote class="editorial-interstitial__quote">
-                              {{ section.settings.interstitial_quote }}
-                            </blockquote>
-                          {% endif %}
-                          {{
-                            section.settings.interstitial_image
-                            | image_url: width: section.settings.interstitial_image.width
-                            | image_tag:
-                              sizes: '(min-width: 750px) 50vw, 100vw',
-                              widths: '375,550,750,1100',
-                              loading: 'lazy',
-                              class: 'editorial-interstitial__image',
-                              alt: section.settings.interstitial_quote
-                          }}
-                        </div>
-                      {% elsif section.settings.interstitial_quote != blank %}
-                        <blockquote class="editorial-interstitial__quote">
-                          {{ section.settings.interstitial_quote }}
-                        </blockquote>
-                      {% endif %}
-                    {% else %}
-                      {% comment %} Even interstitials: quote 2 + image 2 (fallback to 1 if empty) {% endcomment %}
-                      {% assign q2 = section.settings.interstitial_quote_2 | default: section.settings.interstitial_quote %}
-                      {% assign img2 = section.settings.interstitial_image_2 | default: section.settings.interstitial_image %}
-                      {% if img2 != blank %}
-                        <div class="editorial-interstitial--with-image">
-                          {% if q2 != blank %}
-                            <blockquote class="editorial-interstitial__quote">
-                              {{ q2 }}
-                            </blockquote>
-                          {% endif %}
-                          {{
-                            img2
-                            | image_url: width: img2.width
-                            | image_tag:
-                              sizes: '(min-width: 750px) 50vw, 100vw',
-                              widths: '375,550,750,1100',
-                              loading: 'lazy',
-                              class: 'editorial-interstitial__image',
-                              alt: q2
-                          }}
-                        </div>
-                      {% elsif q2 != blank %}
-                        <blockquote class="editorial-interstitial__quote">
-                          {{ q2 }}
-                        </blockquote>
-                      {% endif %}
-                    {% endif %}
-                  </li>
-                {% endif %}
-              {% endif %}
-            {% endfor %}
-          </ul>
+            {% render 'darkroom-index', products: collection.products, page_offset: page_offset %}
+            {% render 'darkroom-contact-sheet', products: collection.products, page_offset: page_offset %}
+          </div>
 
           {% if section.settings.enable_infinite_scroll %}
-            <span ref="viewMoreNext" class="editorial-collection__view-more"></span>
+            <span ref="viewMoreNext" class="darkroom__view-more"></span>
           {% else %}
             {% if paginate.pages > 1 %}
-              <nav class="editorial-pagination" aria-label="Pagination">
+              <nav class="darkroom-pagination" aria-label="Pagination">
                 {% if paginate.previous %}
                   <a
                     href="{{ paginate.previous.url }}"
-                    class="editorial-pagination__link"
+                    class="darkroom-pagination__link"
                     aria-label="Previous page"
                   >
                     &larr; Previous
                   </a>
                 {% else %}
-                  <span class="editorial-pagination__link editorial-pagination__link--disabled" aria-disabled="true">
+                  <span class="darkroom-pagination__link darkroom-pagination__link--disabled" aria-disabled="true">
                     &larr; Previous
                   </span>
                 {% endif %}
 
-                <span class="editorial-pagination__indicator">
-                  Page {{ paginate.current_page }} of {{ paginate.pages }}
+                <span class="darkroom-pagination__indicator">
+                  {{ paginate.current_page }} / {{ paginate.pages }}
                 </span>
 
                 {% if paginate.next %}
                   <a
                     href="{{ paginate.next.url }}"
-                    class="editorial-pagination__link"
+                    class="darkroom-pagination__link"
                     aria-label="Next page"
                   >
                     Next &rarr;
                   </a>
                 {% else %}
-                  <span class="editorial-pagination__link editorial-pagination__link--disabled" aria-disabled="true">
+                  <span class="darkroom-pagination__link darkroom-pagination__link--disabled" aria-disabled="true">
                     Next &rarr;
                   </span>
                 {% endif %}
@@ -271,227 +155,15 @@
           {% endif %}
         {% endif %}
       {% endpaginate %}
-    </div>
+
+      {%- comment -%} Fullscreen dialog for mobile zoom {%- endcomment -%}
+      <dialog class="darkroom-fullscreen" id="DarkroomFullscreen-{{ section.id }}">
+        <button type="button" class="darkroom-fullscreen__close" aria-label="Close preview">&times;</button>
+        <img class="darkroom-fullscreen__image" src="" alt="">
+      </dialog>
+    </darkroom-collection>
   </results-list>
 </collection-component>
-
-{% stylesheet %}
-  /* ==========================================================================
-     Main Collection — Animation Enhancements
-     Scoped under .animations-ready so content is visible without JS.
-     ========================================================================== */
-
-  /* --------------------------------------------------------------------------
-     Card Entrance Animations (size-dependent)
-     -------------------------------------------------------------------------- */
-
-  @media (prefers-reduced-motion: no-preference) {
-    /* Override the base editorial-reveal for size-specific entrances.
-       The base reveal from editorial-grid-styles.liquid handles the default
-       fade+translateY. Here we add size-specific clip-path reveals for
-       feature and spread cards when animations are active. */
-
-    .animations-ready .editorial-grid__item--feature.editorial-reveal {
-      opacity: 0;
-      clip-path: inset(0 0 100% 0);
-      transform: none;
-      transition:
-        opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-        clip-path 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-      transition-delay: var(--reveal-delay, 0ms);
-    }
-
-    .animations-ready .editorial-grid__item--feature.editorial-reveal.editorial-reveal--visible {
-      opacity: 1;
-      clip-path: inset(0 0 0 0);
-    }
-
-    .animations-ready .editorial-grid__item--standard.editorial-reveal {
-      opacity: 0;
-      transform: translateY(30px);
-      transition:
-        opacity 0.5s var(--ease-out-cubic),
-        transform 0.5s var(--ease-out-cubic);
-      transition-delay: var(--reveal-delay, 0ms);
-    }
-
-    .animations-ready .editorial-grid__item--standard.editorial-reveal.editorial-reveal--visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .animations-ready .editorial-grid__item--portrait.editorial-reveal {
-      opacity: 0;
-      transform: translateY(20px) scale(0.97);
-      transition:
-        opacity 0.6s var(--ease-out-cubic),
-        transform 0.6s var(--ease-out-cubic);
-      transition-delay: var(--reveal-delay, 0ms);
-    }
-
-    .animations-ready .editorial-grid__item--portrait.editorial-reveal.editorial-reveal--visible {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-
-    .animations-ready .editorial-grid__item--spread.editorial-reveal {
-      opacity: 0;
-      clip-path: inset(50% 50% 50% 50%);
-      transform: none;
-      transition:
-        opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-        clip-path 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-      transition-delay: var(--reveal-delay, 0ms);
-    }
-
-    .animations-ready .editorial-grid__item--spread.editorial-reveal.editorial-reveal--visible {
-      opacity: 1;
-      clip-path: inset(0 0 0 0);
-    }
-  }
-
-  /* --------------------------------------------------------------------------
-     Card Hover Effects (desktop with hover capability only)
-     -------------------------------------------------------------------------- */
-
-  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    /* Image crossfade — second image fades in on hover */
-    .animations-ready .editorial-grid__item .card-gallery__media:nth-child(2) {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity 0.4s var(--ease-out-cubic), transform 3s var(--ease-out-cubic);
-      z-index: 1;
-    }
-
-    .animations-ready .editorial-grid__item:hover .card-gallery__media:nth-child(2) {
-      opacity: 1;
-      transform: scale(1.03);
-    }
-
-    /* Title underline draw on hover */
-    .animations-ready .editorial-grid__item .product-card .text-block a {
-      position: relative;
-      text-decoration: none;
-    }
-
-    .animations-ready .editorial-grid__item .product-card .text-block a::after {
-      content: '';
-      position: absolute;
-      inset-inline-start: 0;
-      inset-block-end: -1px;
-      width: 0;
-      height: 1px;
-      background: currentColor;
-      transition: width 0.35s var(--ease-out-cubic);
-    }
-
-    .animations-ready .editorial-grid__item:hover .product-card .text-block a::after {
-      width: 100%;
-    }
-
-    /* Quick-add slide-in on hover */
-    .animations-ready .editorial-grid__item .quick-add-button,
-    .animations-ready .editorial-grid__item [data-quick-add-trigger] {
-      opacity: 0;
-      transform: translateY(8px);
-      transition:
-        opacity 0.25s var(--ease-out-cubic),
-        transform 0.25s var(--ease-out-cubic);
-    }
-
-    .animations-ready .editorial-grid__item:hover .quick-add-button,
-    .animations-ready .editorial-grid__item:hover [data-quick-add-trigger] {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Touch devices — quick-add always visible */
-  @media (hover: none) {
-    .editorial-grid__item .quick-add-button,
-    .editorial-grid__item [data-quick-add-trigger] {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  /* --------------------------------------------------------------------------
-     Index Numeral Parallax
-     -------------------------------------------------------------------------- */
-
-  .animations-ready .editorial-card__index {
-    transform: translateY(var(--index-parallax-y, 0px));
-    will-change: transform;
-  }
-
-  /* --------------------------------------------------------------------------
-     Interstitial Word Reveal
-     -------------------------------------------------------------------------- */
-
-  @media (prefers-reduced-motion: no-preference) {
-    .animations-ready .editorial-interstitial__word {
-      display: inline-block;
-      opacity: 0;
-      transform: translateY(8px);
-      transition:
-        opacity 0.35s var(--ease-out-cubic),
-        transform 0.35s var(--ease-out-cubic);
-      transition-delay: calc(var(--word-index, 0) * 0.04s);
-    }
-
-    .animations-ready .editorial-interstitial__word.editorial-interstitial__word--visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Interstitial image reveal */
-    .animations-ready .editorial-interstitial__image {
-      opacity: 0;
-      transition: opacity 0.6s var(--ease-out-cubic) 0.2s;
-    }
-
-    .animations-ready .editorial-interstitial__image.editorial-interstitial__image--visible {
-      opacity: 1;
-    }
-  }
-
-  /* --------------------------------------------------------------------------
-     AJAX Grid Transitions
-     -------------------------------------------------------------------------- */
-
-  @media (prefers-reduced-motion: no-preference) {
-    .animations-ready .editorial-grid__item.editorial-reveal-exit {
-      opacity: 0;
-      transition: opacity 0.2s var(--ease-out-cubic);
-    }
-  }
-
-  /* --------------------------------------------------------------------------
-     Reduced Motion Fallback
-     -------------------------------------------------------------------------- */
-
-  @media (prefers-reduced-motion: reduce) {
-    .animations-ready .editorial-grid__item.editorial-reveal,
-    .animations-ready .editorial-grid__interstitial.editorial-reveal {
-      opacity: 1;
-      transform: none;
-      clip-path: none;
-      transition: none;
-    }
-
-    .animations-ready .editorial-interstitial__word {
-      opacity: 1;
-      transform: none;
-      transition: none;
-    }
-
-    .animations-ready .editorial-interstitial__image {
-      opacity: 1;
-      transition: none;
-    }
-  }
-{% endstylesheet %}
 
 {% schema %}
 {
@@ -502,134 +174,17 @@
   "settings": [
     {
       "type": "header",
-      "content": "Grid"
-    },
-    {
-      "type": "number",
-      "id": "grid_module_size",
-      "label": "Products per pattern cycle",
-      "default": 7
-    },
-    {
-      "type": "checkbox",
-      "id": "enable_infinite_scroll",
-      "label": "Auto load products",
-      "default": false
-    },
-    {
-      "type": "range",
-      "id": "products_per_page",
-      "label": "Products per page",
-      "min": 8,
-      "max": 36,
-      "step": 4,
-      "default": 24,
-      "visible_if": "{{ section.settings.enable_infinite_scroll == false }}"
-    },
-    {
-      "type": "header",
-      "content": "Interstitials"
-    },
-    {
-      "type": "checkbox",
-      "id": "interstitial_enabled",
-      "label": "Enable interstitials",
-      "default": true
-    },
-    {
-      "type": "number",
-      "id": "interstitial_interval",
-      "label": "Products between each",
-      "default": 6
-    },
-    {
-      "type": "textarea",
-      "id": "interstitial_quote",
-      "label": "Pull quote 1",
-      "default": "\"Style is a way to say who you are without having to speak.\""
-    },
-    {
-      "type": "image_picker",
-      "id": "interstitial_image",
-      "label": "Image 1"
-    },
-    {
-      "type": "textarea",
-      "id": "interstitial_quote_2",
-      "label": "Pull quote 2"
-    },
-    {
-      "type": "image_picker",
-      "id": "interstitial_image_2",
-      "label": "Image 2"
-    },
-    {
-      "type": "header",
-      "content": "Typography"
+      "content": "Darkroom"
     },
     {
       "type": "select",
-      "id": "card_title_font",
-      "label": "Card title font",
+      "id": "default_view",
+      "label": "Default view",
       "options": [
-        { "value": "heading", "label": "Heading" },
-        { "value": "body", "label": "Body" },
-        { "value": "accent", "label": "Accent" },
-        { "value": "subheading", "label": "Subheading" }
+        { "value": "index", "label": "Index" },
+        { "value": "sheet", "label": "Contact Sheet" }
       ],
-      "default": "heading"
-    },
-    {
-      "type": "select",
-      "id": "card_price_font",
-      "label": "Card price font",
-      "options": [
-        { "value": "heading", "label": "Heading" },
-        { "value": "body", "label": "Body" },
-        { "value": "accent", "label": "Accent" },
-        { "value": "subheading", "label": "Subheading" }
-      ],
-      "default": "subheading"
-    },
-    {
-      "type": "select",
-      "id": "card_title_case",
-      "label": "Card title case",
-      "options": [
-        { "value": "none", "label": "Default" },
-        { "value": "uppercase", "label": "Uppercase" },
-        { "value": "lowercase", "label": "Lowercase" }
-      ],
-      "default": "none"
-    },
-    {
-      "type": "select",
-      "id": "card_price_case",
-      "label": "Card price case",
-      "options": [
-        { "value": "none", "label": "Default" },
-        { "value": "uppercase", "label": "Uppercase" }
-      ],
-      "default": "uppercase"
-    },
-    {
-      "type": "header",
-      "content": "Appearance"
-    },
-    {
-      "type": "color",
-      "id": "background_color",
-      "label": "Background color"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_card_index",
-      "label": "Show card index numbers",
-      "default": true
-    },
-    {
-      "type": "header",
-      "content": "Animations"
+      "default": "index"
     },
     {
       "type": "checkbox",
@@ -639,13 +194,43 @@
     },
     {
       "type": "select",
-      "id": "animation_intensity",
-      "label": "Animation intensity",
+      "id": "loupe_zoom",
+      "label": "Loupe zoom level",
       "options": [
-        { "value": "subtle", "label": "Subtle" },
-        { "value": "expressive", "label": "Expressive" }
+        { "value": "2", "label": "2×" },
+        { "value": "2.5", "label": "2.5×" },
+        { "value": "3", "label": "3×" },
+        { "value": "4", "label": "4×" }
       ],
-      "default": "subtle"
+      "default": "2.5"
+    },
+    {
+      "type": "header",
+      "content": "Pagination"
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 24
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_infinite_scroll",
+      "label": "Auto load products",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color"
     },
     {
       "type": "header",

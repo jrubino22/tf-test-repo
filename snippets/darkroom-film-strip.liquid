@@ -1,0 +1,81 @@
+{% doc %}
+  Darkroom Film Strip
+
+  Horizontal scrolling film strip expand panel for a single product.
+  Shows all product images with sprocket-hole edges, variant option pills,
+  and a quick-add button.
+
+  @param {object} product - Product object (required)
+
+  @example
+  {% render 'darkroom-film-strip', product: product %}
+{% enddoc %}
+
+{% liquid
+  assign product = product | default: empty
+  unless product != empty
+    break
+  endunless
+
+  assign has_variants = false
+  if product.variants.size > 1
+    assign has_variants = true
+  endif
+
+  assign first_available = product.selected_or_first_available_variant
+%}
+
+<div
+  class="darkroom-filmstrip-wrapper"
+  id="filmstrip-{{ product.id }}"
+  aria-hidden="true"
+>
+  <div class="darkroom-filmstrip" role="region" aria-label="Product images for {{ product.title | escape }}">
+    {% for image in product.images %}
+      <div class="darkroom-filmstrip__frame">
+        {{ image | image_url: width: 600 | image_tag: loading: 'lazy', alt: image.alt | default: product.title, class: 'darkroom-filmstrip__image' }}
+      </div>
+    {% endfor %}
+
+    {% if product.images.size == 0 %}
+      <div class="darkroom-filmstrip__frame">
+        {{ product.featured_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: product.title, class: 'darkroom-filmstrip__image' }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="darkroom-filmstrip__actions">
+    {% if has_variants %}
+      {% for option in product.options_with_values %}
+        {% if forloop.first %}
+          {% for value in option.values %}
+            <button
+              type="button"
+              class="darkroom-filmstrip__variant-pill{% if forloop.first %} darkroom-filmstrip__variant-pill--selected{% endif %}"
+              data-option-position="{{ option.position }}"
+              data-option-value="{{ value | escape }}"
+              aria-label="{{ option.name }}: {{ value | escape }}"
+            >
+              {{ value | escape }}
+            </button>
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <button
+      type="button"
+      class="darkroom-filmstrip__quick-add"
+      data-variant-id="{{ first_available.id }}"
+      data-product-id="{{ product.id }}"
+      {% unless first_available.available %}disabled aria-disabled="true"{% endunless %}
+      aria-label="Add {{ product.title | escape }} to cart"
+    >
+      {% if first_available.available %}
+        + Add
+      {% else %}
+        Sold out
+      {% endif %}
+    </button>
+  </div>
+</div>

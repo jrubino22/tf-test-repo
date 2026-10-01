@@ -1,0 +1,97 @@
+{% doc %}
+  Darkroom Index View
+
+  Typographic product list for the Darkroom collection concept.
+  Renders one row per product with monospace index number, large heading title,
+  price, color swatches, expand button with film strip, cursor preview container,
+  and mobile thumbnail.
+
+  @param {array} products - Paginated collection.products array (required)
+  @param {number} page_offset - Integer offset, (current_page - 1) * per_page
+
+  @example
+  {% render 'darkroom-index', products: collection.products, page_offset: page_offset %}
+{% enddoc %}
+
+{% liquid
+  assign products = products | default: empty
+  assign page_offset = page_offset | default: 0
+%}
+
+<ul class="darkroom-index" id="DarkroomIndex" role="list">
+  {% for product in products %}
+    {% liquid
+      assign item_number = page_offset | plus: forloop.index
+      assign padded_number = item_number | prepend: '000' | slice: -3, 3
+    %}
+
+    <li
+      class="darkroom-index__row"
+      data-product-id="{{ product.id }}"
+      data-product-url="{{ product.url }}"
+    >
+      {%- comment -%} Mobile inline thumbnail {%- endcomment -%}
+      {% if product.featured_image %}
+        {{ product.featured_image | image_url: width: 80 | image_tag: loading: 'lazy', alt: product.title, class: 'darkroom-index__thumb' }}
+      {% endif %}
+
+      {%- comment -%} Monospace index number {%- endcomment -%}
+      <span class="darkroom-index__number" aria-hidden="true">
+        №&nbsp;{{ padded_number }}
+      </span>
+
+      {%- comment -%} Product title link {%- endcomment -%}
+      <div class="darkroom-index__title">
+        <a href="{{ product.url }}" class="darkroom-index__title-link">
+          {{ product.title | escape }}
+        </a>
+      </div>
+
+      {%- comment -%} Price {%- endcomment -%}
+      <span class="darkroom-index__price">
+        {% render 'format-price', price: product.price %}
+      </span>
+
+      {%- comment -%} Color swatches {%- endcomment -%}
+      {% for option in product.options_with_values %}
+        {% assign option_name_lower = option.name | downcase %}
+        {% if option_name_lower == 'color' or option_name_lower == 'colour' %}
+          <div class="darkroom-index__swatches" aria-hidden="true">
+            {% for value in option.values %}
+              <span
+                class="darkroom-index__swatch"
+                style="background-color: {{ value | handleize }};"
+                title="{{ value | escape }}"
+              ></span>
+            {% endfor %}
+          </div>
+          {% break %}
+        {% endif %}
+      {% endfor %}
+
+      {%- comment -%} Film strip expand button {%- endcomment -%}
+      <button
+        type="button"
+        class="darkroom-index__expand"
+        aria-expanded="false"
+        aria-controls="filmstrip-{{ product.id }}"
+        aria-label="Expand film strip for {{ product.title | escape }}"
+      >
+        <span class="darkroom-index__expand-icon" aria-hidden="true">+</span>
+      </button>
+
+      {%- comment -%} Cursor-follow preview (desktop, hidden by default) {%- endcomment -%}
+      <div class="darkroom-index__preview" aria-hidden="true">
+        {% if product.featured_image %}
+          {{ product.featured_image | image_url: width: 500 | image_tag: loading: 'lazy', alt: '' }}
+        {% endif %}
+        {% if product.images.size > 1 %}
+          {{ product.images[1] | image_url: width: 500 | image_tag: loading: 'lazy', alt: '' }}
+        {% endif %}
+      </div>
+
+      {%- comment -%} Film strip panel {%- endcomment -%}
+      {% render 'darkroom-film-strip', product: product %}
+    </li>
+  {% endfor %}
+</ul>
