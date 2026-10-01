@@ -1,0 +1,1402 @@
+<script
+  type="module"
+  src="{{ 'prism-header.js' | asset_url }}"
+  fetchpriority="low"
+></script>
+<script
+  type="module"
+  src="{{ 'cart-icon.js' | asset_url }}"
+  fetchpriority="low"
+></script>
+
+{% liquid
+  assign link_list = section.settings.link_list
+  assign menu = linklists[link_list]
+  assign logo_width = section.settings.logo_width | default: 120
+  assign show_search = section.settings.show_search
+  assign show_cart = section.settings.show_cart
+  assign is_sticky = section.settings.sticky
+  assign compact_on_scroll = section.settings.compact_on_scroll
+%}
+
+<a class="prism-header__skip" href="#MainContent">Skip to content</a>
+
+<prism-header-section
+  id="header-component"
+  data-compact-on-scroll="{{ compact_on_scroll }}"
+  {% if is_sticky %}data-sticky{% endif %}
+  style="
+    --prism-bg: {{ section.settings.background_color }};
+    --prism-text: {{ section.settings.text_color }};
+    --prism-panel-bg: {{ section.settings.panel_background_color }};
+    --prism-accent: {{ section.settings.accent_color }};
+    --prism-logo-width: {{ logo_width }}px;
+    --padding-block-start: {{ section.settings.padding-block-start }}px;
+    --padding-block-end: {{ section.settings.padding-block-end }}px;
+  "
+>
+  <header class="prism-header" role="banner">
+    {%- comment -%} ═══ HEADER BAR ═══ {%- endcomment -%}
+    <div class="prism-header__bar" ref="headerBar">
+
+      {%- comment -%} ── LEFT: Mobile menu trigger + Logo ── {%- endcomment -%}
+      <div class="prism-header__zone prism-header__zone--left">
+        <button
+          class="prism-header__menu-trigger"
+          ref="menuTrigger"
+          on:click="/handleMenuOpen"
+          aria-label="Open navigation menu"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls="prism-drawer"
+        >
+          <svg class="prism-header__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">
+            <path d="M2 4.5h16M2 10h16M2 15.5h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span class="visually-hidden">Menu</span>
+        </button>
+
+        <a href="{{ routes.root_url }}" class="prism-header__logo-link" aria-label="{{ shop.name }} — Home">
+          {% if section.settings.logo != blank %}
+            {{
+              section.settings.logo
+              | image_url: width: section.settings.logo.width
+              | image_tag:
+                class: 'prism-header__logo-image',
+                widths: '80,120,160,200,240,300',
+                sizes: '(min-width: 990px) var(--prism-logo-width), 100px',
+                loading: 'eager',
+                fetchpriority: 'high',
+                alt: shop.name
+            }}
+          {% else %}
+            <span class="prism-header__logo-text">{{ shop.name }}</span>
+          {% endif %}
+        </a>
+      </div>
+
+      {%- comment -%} ── CENTER: Desktop navigation ── {%- endcomment -%}
+      <div class="prism-header__zone prism-header__zone--center">
+        {% if menu.links.size > 0 %}
+          <nav class="prism-header__nav" aria-label="Main navigation">
+            <ul class="prism-header__nav-list" role="menubar">
+              {% for link in menu.links %}
+                <li class="prism-header__nav-item" role="none">
+                  {% if link.links.size > 0 %}
+                    <button
+                      class="prism-header__nav-link prism-header__nav-link--has-children"
+                      ref="navTriggers[]"
+                      role="menuitem"
+                      aria-expanded="false"
+                      aria-controls="prism-panel-{{ forloop.index }}"
+                      aria-haspopup="true"
+                    >
+                      {{ link.title | escape }}
+                      <svg class="prism-header__caret" viewBox="0 0 10 6" width="10" height="6" aria-hidden="true">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  {% else %}
+                    <a
+                      href="{{ link.url }}"
+                      class="prism-header__nav-link"
+                      role="menuitem"
+                      {% if link.active or link.child_active %}aria-current="page"{% endif %}
+                    >
+                      {{ link.title | escape }}
+                    </a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </nav>
+        {% endif %}
+      </div>
+
+      {%- comment -%} ── RIGHT: Search + Cart ── {%- endcomment -%}
+      <div class="prism-header__zone prism-header__zone--right">
+        {% if show_search %}
+          <button
+            class="prism-header__action"
+            ref="searchTrigger"
+            on:click="/handleSearchOpen"
+            aria-label="Open search"
+            aria-controls="prism-search-panel"
+            aria-expanded="false"
+          >
+            <svg class="prism-header__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">
+              <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="visually-hidden">Search</span>
+          </button>
+        {% endif %}
+
+        {% if show_cart %}
+          {% if settings.cart_type == 'drawer' and template.name != 'cart' %}
+            <button
+              class="prism-header__action prism-header__cart-action"
+              ref="cartTrigger"
+              on:click="#cart-drawer/toggle"
+              aria-label="Cart"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-controls="cart-drawer"
+              aria-describedby="cart-bubble-text"
+            >
+              <svg class="prism-header__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">
+                <path d="M4 4h1.5l1.1 7.7a1.5 1.5 0 001.49 1.3h6.82a1.5 1.5 0 001.49-1.3L17 6.5H5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="8.5" cy="16.5" r="1" fill="currentColor"/>
+                <circle cx="14.5" cy="16.5" r="1" fill="currentColor"/>
+              </svg>
+              <cart-icon ref="cartBubble">
+                {% render 'cart-bubble', limit: 100 %}
+              </cart-icon>
+              <span class="visually-hidden">Cart</span>
+            </button>
+          {% else %}
+            <a
+              href="{{ routes.cart_url }}"
+              class="prism-header__action prism-header__cart-action"
+              aria-label="Cart"
+              aria-describedby="cart-bubble-text"
+            >
+              <svg class="prism-header__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">
+                <path d="M4 4h1.5l1.1 7.7a1.5 1.5 0 001.49 1.3h6.82a1.5 1.5 0 001.49-1.3L17 6.5H5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="8.5" cy="16.5" r="1" fill="currentColor"/>
+                <circle cx="14.5" cy="16.5" r="1" fill="currentColor"/>
+              </svg>
+              <cart-icon>
+                {% render 'cart-bubble', limit: 100 %}
+              </cart-icon>
+              <span class="visually-hidden">Cart</span>
+            </a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    {%- comment -%} ═══ EXPANDING PANELS (desktop) ═══ {%- endcomment -%}
+    <div class="prism-header__panels" ref="panelsContainer">
+      {% for link in menu.links %}
+        {% if link.links.size > 0 %}
+          <div
+            class="prism-header__panel"
+            id="prism-panel-{{ forloop.index }}"
+            ref="panels[]"
+            aria-hidden="true"
+            role="menu"
+            aria-label="{{ link.title | escape }}"
+          >
+            <div class="prism-header__panel-inner">
+              <ul class="prism-header__panel-list">
+                {% for child in link.links %}
+                  <li class="prism-header__panel-item">
+                    <a
+                      href="{{ child.url }}"
+                      class="prism-header__panel-link"
+                      role="menuitem"
+                      {% if child.active %}aria-current="page"{% endif %}
+                    >
+                      {{ child.title | escape }}
+                    </a>
+                    {% if child.links.size > 0 %}
+                      <ul class="prism-header__panel-sublist">
+                        {% for grandchild in child.links %}
+                          <li>
+                            <a
+                              href="{{ grandchild.url }}"
+                              class="prism-header__panel-sublink"
+                              role="menuitem"
+                              {% if grandchild.active %}aria-current="page"{% endif %}
+                            >
+                              {{ grandchild.title | escape }}
+                            </a>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {%- comment -%} ═══ SEARCH PANEL ═══ {%- endcomment -%}
+    {% if show_search %}
+      <div
+        class="prism-header__search-panel"
+        id="prism-search-panel"
+        ref="searchPanel"
+        aria-hidden="true"
+      >
+        <div class="prism-header__search-inner">
+          <form action="{{ routes.search_url }}" method="get" role="search" class="prism-header__search-form">
+            <input type="hidden" name="type" value="product">
+            <input
+              type="search"
+              name="q"
+              ref="searchInput"
+              class="prism-header__search-input"
+              placeholder="{{ section.settings.search_placeholder | escape }}"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              on:input="/handleSearchInput"
+              on:keydown="/handleSearchKeydown"
+            >
+            <button type="submit" class="prism-header__search-submit" aria-label="Submit search">
+              <svg class="prism-header__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">
+                <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="prism-header__search-close"
+              ref="searchClose"
+              on:click="/handleSearchClose"
+              aria-label="Close search"
+            >
+              <svg class="prism-header__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" width="16" height="16">
+                <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </form>
+          <div ref="searchResults" class="prism-header__search-results" aria-live="polite"></div>
+        </div>
+      </div>
+    {% endif %}
+
+    {%- comment -%} ═══ BACKDROP ═══ {%- endcomment -%}
+    <div class="prism-header__backdrop" ref="backdrop" on:click="/handleBackdropClick" aria-hidden="true"></div>
+  </header>
+
+  {%- comment -%} ═══ MOBILE DRAWER ═══ {%- endcomment -%}
+  <div
+    id="prism-drawer"
+    class="prism-drawer"
+    ref="drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Navigation menu"
+    aria-hidden="true"
+  >
+    <div class="prism-drawer__header">
+      <button
+        class="prism-drawer__close"
+        ref="drawerClose"
+        on:click="/handleMenuClose"
+        aria-label="Close navigation menu"
+      >
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">
+          <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      {% if section.settings.logo != blank %}
+        <a href="{{ routes.root_url }}" class="prism-drawer__logo" aria-label="{{ shop.name }} — Home">
+          {{
+            section.settings.logo
+            | image_url: width: section.settings.logo.width
+            | image_tag:
+              class: 'prism-drawer__logo-image',
+              widths: '80,120,160',
+              sizes: '100px',
+              loading: 'lazy',
+              alt: shop.name
+          }}
+        </a>
+      {% endif %}
+    </div>
+
+    {% if show_search %}
+      <div class="prism-drawer__search">
+        <form action="{{ routes.search_url }}" method="get" role="search" class="prism-drawer__search-form">
+          <input type="hidden" name="type" value="product">
+          <input
+            type="search"
+            name="q"
+            class="prism-drawer__search-input"
+            placeholder="{{ section.settings.search_placeholder | escape }}"
+            autocomplete="off"
+          >
+          <button type="submit" class="prism-drawer__search-submit" aria-label="Submit search">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="18" height="18">
+              <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    {% endif %}
+
+    <div class="prism-drawer__nav">
+      {%- comment -%} Level 0: Root menu {%- endcomment -%}
+      <div class="prism-drawer__level" ref="drawerLevels[]" data-level-id="root" data-active>
+        {% if menu.links.size > 0 %}
+          <ul class="prism-drawer__list">
+            {% for link in menu.links %}
+              <li class="prism-drawer__item">
+                {% if link.links.size > 0 %}
+                  <div class="prism-drawer__item-row">
+                    <a href="{{ link.url }}" class="prism-drawer__link">{{ link.title | escape }}</a>
+                    <button
+                      class="prism-drawer__forward"
+                      ref="drawerForward[]"
+                      on:click="/handleDrawerForward"
+                      data-target="level-{{ forloop.index }}"
+                      aria-label="Open {{ link.title | escape }} submenu"
+                    >
+                      <svg viewBox="0 0 10 16" fill="none" width="10" height="16" aria-hidden="true">
+                        <path d="M1.5 1l7 7-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                {% else %}
+                  <a
+                    href="{{ link.url }}"
+                    class="prism-drawer__link"
+                    {% if link.active %}aria-current="page"{% endif %}
+                  >
+                    {{ link.title | escape }}
+                  </a>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% elsif request.design_mode %}
+          <p class="prism-drawer__empty">No menu configured. Select a menu in the header settings.</p>
+        {% endif %}
+      </div>
+
+      {%- comment -%} Sublevels: one per top-level parent {%- endcomment -%}
+      {% for link in menu.links %}
+        {% if link.links.size > 0 %}
+          <div class="prism-drawer__level" ref="drawerLevels[]" data-level-id="level-{{ forloop.index }}">
+            <button
+              class="prism-drawer__back"
+              data-drawer-back
+              on:click="/handleDrawerBack"
+              aria-label="Back to main menu"
+            >
+              <svg viewBox="0 0 10 16" fill="none" width="10" height="16" aria-hidden="true">
+                <path d="M8.5 1l-7 7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Back</span>
+            </button>
+            <span class="prism-drawer__level-title">{{ link.title | escape }}</span>
+            <ul class="prism-drawer__list">
+              {% for child in link.links %}
+                <li class="prism-drawer__item">
+                  {% if child.links.size > 0 %}
+                    <div class="prism-drawer__item-row">
+                      <a href="{{ child.url }}" class="prism-drawer__link">{{ child.title | escape }}</a>
+                      <button
+                        class="prism-drawer__forward"
+                        ref="drawerForward[]"
+                        on:click="/handleDrawerForward"
+                        data-target="level-{{ forloop.parentloop.index }}-{{ forloop.index }}"
+                        aria-label="Open {{ child.title | escape }} submenu"
+                      >
+                        <svg viewBox="0 0 10 16" fill="none" width="10" height="16" aria-hidden="true">
+                          <path d="M1.5 1l7 7-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  {% else %}
+                    <a
+                      href="{{ child.url }}"
+                      class="prism-drawer__link"
+                      {% if child.active %}aria-current="page"{% endif %}
+                    >
+                      {{ child.title | escape }}
+                    </a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          {%- comment -%} Third-level sublevels {%- endcomment -%}
+          {% for child in link.links %}
+            {% if child.links.size > 0 %}
+              <div class="prism-drawer__level" ref="drawerLevels[]" data-level-id="level-{{ forloop.parentloop.index }}-{{ forloop.index }}">
+                <button
+                  class="prism-drawer__back"
+                  data-drawer-back
+                  on:click="/handleDrawerBack"
+                  aria-label="Back to {{ link.title | escape }}"
+                >
+                  <svg viewBox="0 0 10 16" fill="none" width="10" height="16" aria-hidden="true">
+                    <path d="M8.5 1l-7 7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span>Back</span>
+                </button>
+                <span class="prism-drawer__level-title">{{ child.title | escape }}</span>
+                <ul class="prism-drawer__list">
+                  {% for grandchild in child.links %}
+                    <li class="prism-drawer__item">
+                      <a
+                        href="{{ grandchild.url }}"
+                        class="prism-drawer__link"
+                        {% if grandchild.active %}aria-current="page"{% endif %}
+                      >
+                        {{ grandchild.title | escape }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</prism-header-section>
+
+{% stylesheet %}
+  /* ═══════════════════════════════════════════════
+     PRISM HEADER — CORE LAYOUT
+     ═══════════════════════════════════════════════ */
+
+  .prism-header__sentinel {
+    height: 1px;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .prism-header__skip {
+    position: absolute;
+    inset-inline-start: -9999px;
+    top: auto;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    background: var(--prism-bg, #ffffff);
+    color: var(--prism-text, #1a1a1a);
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+
+  .prism-header__skip:focus {
+    inset-inline-start: 0.5rem;
+    top: 0.5rem;
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  prism-header-section {
+    display: block;
+    position: relative;
+    z-index: var(--layer-header-menu, 12);
+  }
+
+  prism-header-section[data-sticky] {
+    position: sticky;
+    top: 0;
+    z-index: var(--layer-sticky, 8);
+  }
+
+  .prism-header {
+    background: var(--prism-bg, #ffffff);
+    color: var(--prism-text, #1a1a1a);
+    position: relative;
+    overflow-x: clip;
+  }
+
+  .prism-header__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: var(--padding-block-start, 20px) var(--padding-block-end, 20px);
+    padding-inline: var(--page-margin, 1.5rem);
+    position: relative;
+    z-index: var(--layer-header-menu, 12);
+    background: var(--prism-bg, #ffffff);
+  }
+
+  /* ═══ ZONES ═══ */
+
+  .prism-header__zone {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .prism-header__zone--center {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .prism-header__zone--right {
+    gap: 8px;
+  }
+
+  /* ═══ LOGO ═══ */
+
+  .prism-header__logo-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .prism-header__logo-image {
+    width: var(--prism-logo-width, 120px);
+    height: auto;
+    display: block;
+    object-fit: contain;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-header__logo-image {
+      transition: transform 0.3s ease;
+    }
+  }
+
+  .prism-header__logo-text {
+    font-family: var(--font-heading--family, sans-serif);
+    font-size: clamp(1rem, 2vw, 1.5rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* ═══ DESKTOP NAV ═══ */
+
+  .prism-header__nav {
+    display: none;
+  }
+
+  @media screen and (min-width: 990px) {
+    .prism-header__nav {
+      display: flex;
+    }
+  }
+
+  .prism-header__nav-list {
+    display: flex;
+    align-items: center;
+    gap: clamp(24px, 3vw, 48px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .prism-header__nav-item {
+    position: relative;
+  }
+
+  .prism-header__nav-link {
+    font-family: var(--font-heading--family, sans-serif);
+    font-size: var(--prism-nav-font-size, 0.875rem);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: inherit;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0.25em 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+    border-bottom: 1.5px solid transparent;
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-header__nav-link {
+      transition: border-color 0.2s ease;
+    }
+  }
+
+  .prism-header__nav-link:hover,
+  .prism-header__nav-link:focus-visible,
+  .prism-header__nav-link[aria-expanded="true"] {
+    border-bottom-color: currentColor;
+  }
+
+  .prism-header__nav-link:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 4px;
+  }
+
+  .prism-header__nav-link[aria-current="page"] {
+    border-bottom-color: var(--prism-accent, #000000);
+  }
+
+  .prism-header__caret {
+    flex-shrink: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-header__caret {
+      transition: transform 0.2s ease;
+    }
+
+    .prism-header__nav-link[aria-expanded="true"] .prism-header__caret {
+      transform: rotate(180deg);
+    }
+  }
+
+  /* ═══ ACTION BUTTONS ═══ */
+
+  .prism-header__action {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    position: relative;
+  }
+
+  .prism-header__action:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-header__icon {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .prism-header__cart-action {
+    position: relative;
+  }
+
+  .prism-header__cart-action cart-icon {
+    position: absolute;
+    top: -4px;
+    inset-inline-end: -6px;
+  }
+
+  /* ═══ MOBILE MENU TRIGGER ═══ */
+
+  .prism-header__menu-trigger {
+    display: inline-flex;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    align-items: center;
+  }
+
+  .prism-header__menu-trigger:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  @media screen and (min-width: 990px) {
+    .prism-header__menu-trigger {
+      display: none;
+    }
+  }
+
+  /* ═══ EXPANDING PANELS (desktop) ═══ */
+
+  .prism-header__panels {
+    position: relative;
+    z-index: var(--layer-header-menu, 12);
+    background: var(--prism-bg, #ffffff);
+  }
+
+  .prism-header__panel {
+    max-height: 0;
+    overflow: hidden;
+    background: var(--prism-panel-bg, #f5f5f5);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-header__panel {
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prism-header__panel[aria-hidden="false"] {
+      max-height: none;
+    }
+
+    .prism-header__panel[aria-hidden="true"] {
+      max-height: 0;
+    }
+  }
+
+  .prism-header__panel-inner {
+    padding: 2rem var(--page-margin, 1.5rem);
+  }
+
+  .prism-header__panel-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem 3rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .prism-header__panel-item {
+    min-width: 160px;
+  }
+
+  .prism-header__panel-link {
+    font-family: var(--font-body--family, sans-serif);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+    display: block;
+    padding-block-end: 0.5rem;
+    margin-block-end: 0.5rem;
+    border-bottom: 1px solid currentColor;
+  }
+
+  .prism-header__panel-link:hover,
+  .prism-header__panel-link:focus-visible {
+    color: var(--prism-accent, #000000);
+  }
+
+  .prism-header__panel-link:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-header__panel-link[aria-current="page"] {
+    color: var(--prism-accent, #000000);
+  }
+
+  .prism-header__panel-sublist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .prism-header__panel-sublink {
+    font-family: var(--font-body--family, sans-serif);
+    font-size: 0.8125rem;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.75;
+    display: block;
+  }
+
+  .prism-header__panel-sublink:hover,
+  .prism-header__panel-sublink:focus-visible {
+    opacity: 1;
+  }
+
+  .prism-header__panel-sublink:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-header__panel-sublink[aria-current="page"] {
+    opacity: 1;
+    font-weight: 600;
+  }
+
+  /* ═══ SEARCH PANEL ═══ */
+
+  .prism-header__search-panel {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    z-index: var(--layer-header-menu, 12);
+    background: var(--prism-bg, #ffffff);
+    padding: 1.5rem var(--page-margin, 1.5rem);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-header__search-panel {
+      transition: opacity 0.2s ease;
+    }
+  }
+
+  .prism-header__search-panel[aria-hidden="false"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .prism-header__search-inner {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .prism-header__search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid var(--prism-text, #1a1a1a);
+    padding-block-end: 0.5rem;
+  }
+
+  .prism-header__search-input {
+    flex: 1;
+    font-family: var(--font-body--family, sans-serif);
+    font-size: 1rem;
+    color: inherit;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0.5rem 0;
+  }
+
+  .prism-header__search-input::placeholder {
+    color: inherit;
+    opacity: 0.5;
+  }
+
+  .prism-header__search-submit,
+  .prism-header__search-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .prism-header__search-submit:focus-visible,
+  .prism-header__search-close:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-header__search-results {
+    margin-block-start: 1rem;
+  }
+
+  /* ═══ BACKDROP ═══ */
+
+  .prism-header__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    z-index: var(--layer-overlay, 16);
+  }
+
+  @supports (backdrop-filter: blur(4px)) {
+    .prism-header__backdrop {
+      backdrop-filter: blur(4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-header__backdrop {
+      transition: opacity 0.3s ease;
+    }
+  }
+
+  .prism-header__backdrop.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ═══ SCROLL COMPRESSION ═══ */
+
+  @media (prefers-reduced-motion: no-preference) {
+    prism-header-section {
+      --prism-header-padding-block: var(--padding-block-start, 20px);
+      --prism-nav-font-size: 0.875rem;
+    }
+
+    prism-header-section .prism-header__bar {
+      transition: padding 0.3s ease;
+    }
+
+    prism-header-section .prism-header__logo-image {
+      transition: transform 0.3s ease;
+    }
+
+    prism-header-section[data-scroll-state="compressing"] {
+      --prism-nav-font-size: 0.8125rem;
+    }
+
+    prism-header-section[data-scroll-state="compressing"] .prism-header__bar {
+      padding-block: calc(var(--padding-block-start, 20px) * 0.7);
+    }
+
+    prism-header-section[data-scroll-state="compressing"] .prism-header__logo-image {
+      transform: scale(0.9);
+    }
+
+    prism-header-section[data-scroll-state="compact"] {
+      --prism-nav-font-size: 0.75rem;
+    }
+
+    prism-header-section[data-scroll-state="compact"] .prism-header__bar {
+      padding-block: calc(var(--padding-block-start, 20px) * 0.5);
+    }
+
+    prism-header-section[data-scroll-state="compact"] .prism-header__logo-image {
+      transform: scale(0.8);
+    }
+  }
+
+  /* ═══ MOBILE DRAWER ═══ */
+
+  .prism-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-menu-drawer, 18);
+    background: var(--prism-bg, #ffffff);
+    color: var(--prism-text, #1a1a1a);
+    transform: translateX(-100%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-drawer {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  .prism-drawer[aria-hidden="false"] {
+    transform: translateX(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prism-drawer {
+      transition: none;
+    }
+
+    .prism-drawer[aria-hidden="true"] {
+      display: none;
+    }
+
+    .prism-drawer[aria-hidden="false"] {
+      display: flex;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .prism-drawer {
+      max-width: 420px;
+    }
+  }
+
+  .prism-drawer__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem var(--page-margin, 1.5rem);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+  }
+
+  .prism-drawer__close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .prism-drawer__close:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-drawer__logo {
+    display: inline-flex;
+  }
+
+  .prism-drawer__logo-image {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .prism-drawer__search {
+    padding: 0.75rem var(--page-margin, 1.5rem);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+  }
+
+  .prism-drawer__search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .prism-drawer__search-input {
+    flex: 1;
+    font-family: var(--font-body--family, sans-serif);
+    font-size: 0.875rem;
+    color: inherit;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+  }
+
+  .prism-drawer__search-input::placeholder {
+    color: inherit;
+    opacity: 0.5;
+  }
+
+  .prism-drawer__search-submit {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    opacity: 0.6;
+  }
+
+  /* ═══ DRAWER NAV LEVELS ═══ */
+
+  .prism-drawer__nav {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .prism-drawer__level {
+    position: absolute;
+    inset: 0;
+    transform: translateX(100%);
+    overflow-y: auto;
+    padding: 1rem var(--page-margin, 1.5rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-drawer__level {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  .prism-drawer__level[data-active] {
+    transform: translateX(0);
+  }
+
+  .prism-drawer__level[data-exited] {
+    transform: translateX(-100%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prism-drawer__level {
+      transition: none;
+    }
+  }
+
+  .prism-drawer__back {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.5rem 0;
+    margin-block-end: 0.5rem;
+    font-family: var(--font-body--family, sans-serif);
+    font-size: 0.8125rem;
+    opacity: 0.6;
+  }
+
+  .prism-drawer__back:hover {
+    opacity: 1;
+  }
+
+  .prism-drawer__back:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-drawer__level-title {
+    font-family: var(--font-heading--family, sans-serif);
+    font-size: 1.125rem;
+    font-weight: 700;
+    display: block;
+    margin-block-end: 1rem;
+  }
+
+  .prism-drawer__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .prism-drawer__item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .prism-drawer__item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .prism-drawer__link {
+    font-family: var(--font-body--family, sans-serif);
+    font-size: 1rem;
+    color: inherit;
+    text-decoration: none;
+    padding: 0.875rem 0;
+    display: block;
+    flex: 1;
+  }
+
+  .prism-drawer__link:hover {
+    color: var(--prism-accent, #000000);
+  }
+
+  .prism-drawer__link:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-drawer__link[aria-current="page"] {
+    font-weight: 700;
+  }
+
+  .prism-drawer__forward {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0.875rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.4;
+  }
+
+  .prism-drawer__forward:hover {
+    opacity: 1;
+  }
+
+  .prism-drawer__forward:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-drawer__empty {
+    font-size: 0.875rem;
+    opacity: 0.5;
+    padding: 2rem 0;
+    text-align: center;
+  }
+
+  /* ═══ SEARCH RESULTS (predictive) ═══ */
+
+  .prism-search__group {
+    margin-block-end: 1rem;
+  }
+
+  .prism-search__group-title {
+    font-family: var(--font-subheading--family, sans-serif);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+    margin: 0 0 0.5rem;
+  }
+
+  .prism-search__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .prism-search__result {
+    display: block;
+    padding: 0.5rem 0;
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .prism-search__result:hover {
+    color: var(--prism-accent, #000000);
+  }
+
+  .prism-search__result:focus-visible {
+    outline: 2px solid var(--prism-accent, #000000);
+    outline-offset: 2px;
+  }
+
+  .prism-search__no-results {
+    font-size: 0.875rem;
+    opacity: 0.5;
+    text-align: center;
+    padding: 1rem 0;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Prism header",
+  "tag": "section",
+  "class": "header-section",
+  "enabled_on": {
+    "groups": ["header"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "Logo width",
+      "min": 40,
+      "max": 300,
+      "step": 10,
+      "default": 120,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
+    {
+      "type": "link_list",
+      "id": "link_list",
+      "label": "Menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "header",
+      "content": "Search"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Show search",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "search_placeholder",
+      "label": "Search placeholder",
+      "default": "Search..."
+    },
+    {
+      "type": "header",
+      "content": "Cart"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart",
+      "label": "Show cart",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Behavior"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky",
+      "label": "Sticky header",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "compact_on_scroll",
+      "label": "Compact on scroll",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "panel_background_color",
+      "label": "Panel background",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 20,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Prism header",
+      "category": "Header"
+    }
+  ]
+}
+{% endschema %}

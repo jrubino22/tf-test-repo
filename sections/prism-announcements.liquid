@@ -1,0 +1,209 @@
+<script
+  type="module"
+  src="{{ 'prism-announcements.js' | asset_url }}"
+  fetchpriority="low"
+></script>
+
+<prism-announcements-section
+  data-speed="{{ section.settings.speed }}"
+  style="
+    --prism-announcements-bg: {{ section.settings.background_color }};
+    --prism-announcements-text: {{ section.settings.text_color }};
+    --padding-block-start: {{ section.settings.padding-block-start }}px;
+    --padding-block-end: {{ section.settings.padding-block-end }}px;
+  "
+>
+  <div class="prism-announcements">
+    {% if section.blocks.size > 0 %}
+      <div class="prism-announcements__slides" role="region" aria-label="Announcements">
+        {% for block in section.blocks %}
+          <div
+            class="prism-announcements__slide{% if forloop.first %} is-active{% endif %}"
+            ref="slides[]"
+            data-block-id="{{ block.id }}"
+            {% unless forloop.first %}aria-hidden="true"{% endunless %}
+            {{ block.shopify_attributes }}
+          >
+            {% if block.settings.link != blank %}
+              <a href="{{ block.settings.link }}" class="prism-announcements__link">
+                {{ block.settings.text | escape }}
+              </a>
+            {% else %}
+              <span class="prism-announcements__text">
+                {{ block.settings.text | escape }}
+              </span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% elsif request.design_mode %}
+      <p class="prism-announcements__empty">Add announcement blocks to populate this bar.</p>
+    {% endif %}
+  </div>
+</prism-announcements-section>
+
+{% stylesheet %}
+  .prism-announcements {
+    background-color: var(--prism-announcements-bg, #1a1a1a);
+    color: var(--prism-announcements-text, #ffffff);
+    padding-block-start: var(--padding-block-start, 12px);
+    padding-block-end: var(--padding-block-end, 12px);
+    padding-inline: var(--page-margin, 1.5rem);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .prism-announcements__slides {
+    position: relative;
+    min-height: 1.4em;
+  }
+
+  .prism-announcements__slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .prism-announcements__slide {
+      transition: opacity 0.4s ease;
+    }
+  }
+
+  .prism-announcements__slide.is-active {
+    opacity: 1;
+    pointer-events: auto;
+    position: relative;
+  }
+
+  .prism-announcements__link,
+  .prism-announcements__text {
+    font-family: var(--font-subheading--family, sans-serif);
+    font-size: var(--font-size--3xs, 0.75rem);
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .prism-announcements__link:hover {
+    text-decoration: underline;
+  }
+
+  .prism-announcements__empty {
+    font-size: var(--font-size--3xs, 0.75rem);
+    opacity: 0.6;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prism-announcements__slide {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Prism announcements",
+  "tag": "section",
+  "class": "section-wrapper",
+  "enabled_on": {
+    "groups": ["header"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Behavior"
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Rotation speed",
+      "info": "0 disables auto-rotation",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "default": 5
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 12,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Announcement",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Welcome to our store"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Prism announcements",
+      "category": "Header",
+      "blocks": [
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "Welcome to our store"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
