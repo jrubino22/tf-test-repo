@@ -4,18 +4,24 @@
   Typographic product list for the Darkroom collection concept.
   Renders one row per product with monospace index number, large heading title,
   price, color swatches, expand button with film strip, cursor preview container,
-  and mobile thumbnail.
+  and mobile thumbnail. Optionally inserts drying line interstitials between rows.
 
   @param {array} products - Paginated collection.products array (required)
   @param {number} page_offset - Integer offset, (current_page - 1) * per_page
+  @param {boolean} enable_drying_lines - Whether to show drying line interstitials (default: false)
+  @param {number} drying_line_interval - Number of rows between drying lines (default: 8)
+  @param {number} drying_line_prints - Number of prints per drying line (default: 4)
 
   @example
-  {% render 'darkroom-index', products: collection.products, page_offset: page_offset %}
+  {% render 'darkroom-index', products: collection.products, page_offset: page_offset, enable_drying_lines: true, drying_line_interval: 8, drying_line_prints: 4 %}
 {% enddoc %}
 
 {% liquid
   assign products = products | default: empty
   assign page_offset = page_offset | default: 0
+  assign enable_drying_lines = enable_drying_lines | default: false
+  assign drying_line_interval = drying_line_interval | default: 8
+  assign drying_line_prints = drying_line_prints | default: 4
 %}
 
 <ul class="darkroom-index" id="DarkroomIndex" role="list">
@@ -93,5 +99,16 @@
       {%- comment -%} Film strip panel {%- endcomment -%}
       {% render 'darkroom-film-strip', product: product %}
     </li>
+
+    {%- comment -%} Drying line interstitial — inserted after every N rows {%- endcomment -%}
+    {% if enable_drying_lines %}
+      {% assign mod_check = forloop.index | modulo: drying_line_interval %}
+      {% if mod_check == 0 and forloop.last == false %}
+        {% assign remaining = products.size | minus: forloop.index %}
+        {% if remaining >= 3 %}
+          {% render 'darkroom-drying-line', products: products, start_index: forloop.index, prints_count: drying_line_prints, page_offset: page_offset %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
   {% endfor %}
 </ul>

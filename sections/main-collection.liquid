@@ -110,7 +110,7 @@
               assign page_offset = current_page | minus: 1 | times: per_page_int
             %}
 
-            {% render 'darkroom-index', products: collection.products, page_offset: page_offset %}
+            {% render 'darkroom-index', products: collection.products, page_offset: page_offset, enable_drying_lines: section.settings.enable_drying_lines, drying_line_interval: section.settings.drying_line_interval, drying_line_prints: section.settings.drying_line_prints %}
             {% render 'darkroom-contact-sheet', products: collection.products, page_offset: page_offset %}
           </div>
 
@@ -203,6 +203,36 @@
         { "value": "4", "label": "4×" }
       ],
       "default": "2.5"
+    },
+    {
+      "type": "header",
+      "content": "Drying Line"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_drying_lines",
+      "label": "Show drying lines",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "drying_line_interval",
+      "label": "Rows between lines",
+      "min": 4,
+      "max": 16,
+      "step": 1,
+      "default": 8,
+      "visible_if": "{{ section.settings.enable_drying_lines }}"
+    },
+    {
+      "type": "range",
+      "id": "drying_line_prints",
+      "label": "Prints per line",
+      "min": 3,
+      "max": 5,
+      "step": 1,
+      "default": 4,
+      "visible_if": "{{ section.settings.enable_drying_lines }}"
     },
     {
       "type": "header",

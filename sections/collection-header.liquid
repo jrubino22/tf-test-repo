@@ -30,17 +30,15 @@
       </p>
     {% endif %}
 
-    {% if section.settings.show_collection_image and collection.image != blank %}
-      <div class="darkroom-header__image-frame">
-        {{
-          collection.image
-          | image_url: width: 400
-          | image_tag:
-            loading: 'eager',
-            alt: collection.title,
-            class: 'darkroom-header__image'
-        }}
-      </div>
+    {% if section.settings.show_test_strip %}
+      {% liquid
+        assign strip_image = collection.image | default: section.settings.test_strip_fallback_image
+        assign bands_int = section.settings.test_strip_bands | plus: 0
+        assign correct_clamped = section.settings.test_strip_correct_band | at_most: bands_int
+      %}
+      {% if strip_image != blank %}
+        {% render 'darkroom-test-strip', image: strip_image, bands_count: bands_int, correct_band: correct_clamped, alt_text: collection.title %}
+      {% endif %}
     {% endif %}
   </div>
 </div>
@@ -86,10 +84,41 @@
       "default": "exposures"
     },
     {
+      "type": "header",
+      "content": "Test Strip"
+    },
+    {
       "type": "checkbox",
-      "id": "show_collection_image",
-      "label": "Show collection image",
-      "default": false
+      "id": "show_test_strip",
+      "label": "Show test strip",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "test_strip_bands",
+      "label": "Number of bands",
+      "options": [
+        { "value": "5", "label": "5 bands" },
+        { "value": "6", "label": "6 bands" }
+      ],
+      "default": "5",
+      "visible_if": "{{ section.settings.show_test_strip }}"
+    },
+    {
+      "type": "image_picker",
+      "id": "test_strip_fallback_image",
+      "label": "Fallback image",
+      "visible_if": "{{ section.settings.show_test_strip }}"
+    },
+    {
+      "type": "range",
+      "id": "test_strip_correct_band",
+      "label": "Correct exposure band",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 4,
+      "visible_if": "{{ section.settings.show_test_strip }}"
     },
     {
       "type": "header",

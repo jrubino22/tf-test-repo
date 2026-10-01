@@ -13,6 +13,9 @@
       "type": "collection-header",
       "settings": {
         "title_size": "extra-large",
+        "show_test_strip": true,
+        "test_strip_bands": "5",
+        "test_strip_correct_band": 4,
         "background_color": "#1a1a1a",
         "padding-block-start": 80,
         "padding-block-end": 48
@@ -47,6 +50,9 @@
         "enable_infinite_scroll": false,
         "products_per_page": 24,
         "enable_animations": true,
+        "enable_drying_lines": true,
+        "drying_line_interval": 8,
+        "drying_line_prints": 4,
         "padding-block-start": 0,
         "padding-block-end": 32
       }

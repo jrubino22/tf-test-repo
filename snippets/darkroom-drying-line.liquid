@@ -1,0 +1,87 @@
+{% doc %}
+  Darkroom Drying Line Interstitial
+
+  Renders a decorative drying line between product rows showing upcoming prints
+  hanging from a wire with clothespin clips, white-bordered photo paper effect,
+  and monospace frame-code captions.
+
+  @param {array} products - Full paginated products array (required)
+  @param {number} start_index - 0-based offset into products for the next prints (required)
+  @param {number} prints_count - Number of prints to show, 3–5 (default: 4)
+  @param {number} page_offset - Page offset for frame codes (default: 0)
+
+  @example
+  {% render 'darkroom-drying-line',
+    products: collection.products,
+    start_index: forloop.index,
+    prints_count: 4,
+    page_offset: page_offset
+  %}
+{% enddoc %}
+
+{% liquid
+  assign products = products | default: empty
+  assign start_index = start_index | default: 0
+  assign prints_count = prints_count | default: 4
+  assign page_offset = page_offset | default: 0
+%}
+
+<li class="darkroom-drying-line" role="group" aria-label="Up next">
+  <div class="darkroom-drying-line__wire" aria-hidden="true"></div>
+
+  <ol class="darkroom-drying-line__prints">
+    {% for product in products offset: start_index limit: prints_count %}
+      {% liquid
+        assign rotation_seed = product.id | modulo: 7 | minus: 3
+        assign print_index = forloop.index0
+
+        assign vendor_upper = product.vendor | upcase | default: ''
+        if vendor_upper != blank
+          assign vendor_prefix = vendor_upper | slice: 0, 2
+        else
+          assign handle_upper = product.handle | upcase | default: 'XX'
+          assign vendor_prefix = handle_upper | slice: 0, 2
+        endif
+        assign frame_code = vendor_prefix | append: '-' | append: product.id
+      %}
+
+      <li
+        class="darkroom-drying-line__print"
+        style="--print-rotation: {{ rotation_seed }}deg; --print-index: {{ print_index }};"
+      >
+        <a href="{{ product.url }}" class="darkroom-drying-line__link">
+          <span class="darkroom-drying-line__clip" aria-hidden="true">
+            <svg width="16" height="24" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="4" y="0" width="8" height="14" rx="2" stroke="rgb(var(--color-foreground-rgb) / 0.4)" stroke-width="1" fill="none"/>
+              <line x1="8" y1="14" x2="8" y2="24" stroke="rgb(var(--color-foreground-rgb) / 0.3)" stroke-width="1"/>
+              <circle cx="8" cy="6" r="1.5" fill="rgb(var(--color-foreground-rgb) / 0.3)"/>
+            </svg>
+          </span>
+
+          <div class="darkroom-drying-line__photo">
+            {% if product.featured_image %}
+              {% liquid
+                assign img_alt = product.featured_image.alt | default: product.title | escape
+                assign sizes_val = '(max-width: 749px) 140px, 200px'
+              %}
+              {{
+                product.featured_image
+                | image_url: width: 600
+                | image_tag:
+                  loading: 'lazy',
+                  alt: img_alt,
+                  sizes: sizes_val,
+                  widths: '200,400,600'
+              }}
+            {% endif %}
+          </div>
+
+          <div class="darkroom-drying-line__caption">
+            <span class="darkroom-drying-line__code">{{ frame_code }}</span>
+            <span class="darkroom-drying-line__title">{{ product.title | escape }}</span>
+          </div>
+        </a>
+      </li>
+    {% endfor %}
+  </ol>
+</li>

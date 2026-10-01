@@ -984,4 +984,260 @@
       max-width: 140px;
     }
   }
+
+  /* ==========================================================================
+     Drying Line Interstitials
+     ========================================================================== */
+
+  .darkroom-drying-line {
+    list-style: none;
+    width: 100%;
+    padding-block: var(--padding-xl);
+  }
+
+  /* Hide drying lines in contact sheet view */
+  .darkroom-view--sheet .darkroom-drying-line {
+    display: none;
+  }
+
+  .darkroom-drying-line__wire {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    border-bottom: 1px solid rgb(var(--color-foreground-rgb) / 0.3);
+    border-radius: 0 0 50% 50%;
+  }
+
+  .darkroom-drying-line__prints {
+    display: flex;
+    gap: var(--gap-md);
+    justify-content: center;
+    padding-block-start: var(--padding-sm);
+    list-style: none;
+    margin: 0;
+    padding-inline: var(--padding-lg);
+  }
+
+  .darkroom-drying-line__print {
+    flex: 0 0 auto;
+    width: 200px;
+    transform: rotate(var(--print-rotation, 0deg));
+    transition: transform 0.4s var(--ease-out-cubic),
+                box-shadow 0.3s ease;
+  }
+
+  .darkroom-drying-line__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .darkroom-drying-line__link:focus-visible {
+    outline: 2px solid rgb(var(--color-foreground-rgb));
+    outline-offset: 4px;
+  }
+
+  .darkroom-drying-line__clip {
+    display: flex;
+    justify-content: center;
+    margin-block-end: -4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .darkroom-drying-line__photo {
+    border: 3px solid #fff;
+    border-bottom-width: 12px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+    background: #fff;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .darkroom-drying-line__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .darkroom-drying-line__caption {
+    font-family: var(--font-mono--family);
+    font-weight: var(--font-mono--weight);
+    font-size: var(--font-size--3xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    padding-block-start: var(--padding-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: rgb(var(--color-foreground-rgb) / 0.6);
+    max-width: 100%;
+  }
+
+  .darkroom-drying-line__code {
+    white-space: nowrap;
+  }
+
+  .darkroom-drying-line__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Hover: straighten and lift */
+  @media (hover: hover) and (pointer: fine) {
+    .darkroom-drying-line__print:hover {
+      transform: rotate(0deg) translateY(-4px);
+    }
+  }
+
+  /* Sway animation keyframes */
+  @keyframes darkroom-sway {
+    0%, 100% { transform: rotate(var(--print-rotation, 0deg)); }
+    25% { transform: rotate(calc(var(--print-rotation, 0deg) + 1.5deg)); }
+    75% { transform: rotate(calc(var(--print-rotation, 0deg) - 1.5deg)); }
+  }
+
+  /* Sway plays when visible and JS is ready */
+  .darkroom-ready .darkroom-drying-line--visible .darkroom-drying-line__print {
+    animation: darkroom-sway 3s ease-in-out calc(var(--print-index, 0) * 0.15s) 2;
+  }
+
+  /* Hover overrides sway */
+  @media (hover: hover) and (pointer: fine) {
+    .darkroom-ready .darkroom-drying-line--visible .darkroom-drying-line__print:hover {
+      animation: none;
+    }
+  }
+
+  /* Develop effect integration: drying lines participate */
+  .darkroom-developing .darkroom-drying-line {
+    opacity: 0;
+    filter: sepia(0.6) saturate(0.4);
+    transition: opacity 0.8s var(--ease-out-cubic),
+                filter 1s var(--ease-out-cubic);
+    transition-delay: var(--develop-delay, 0ms);
+  }
+
+  .darkroom-developing.darkroom-developed .darkroom-drying-line {
+    opacity: 1;
+    filter: none;
+  }
+
+  /* Mobile drying line overrides */
+  @media screen and (max-width: 749px) {
+    .darkroom-drying-line__prints {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      justify-content: flex-start;
+      -webkit-overflow-scrolling: touch;
+      padding-inline: var(--page-margin);
+    }
+
+    .darkroom-drying-line__print {
+      width: 140px;
+      scroll-snap-align: center;
+    }
+
+    /* No sway on mobile */
+    .darkroom-ready .darkroom-drying-line--visible .darkroom-drying-line__print {
+      animation: none;
+    }
+  }
+
+  /* Reduced motion: no sway */
+  @media (prefers-reduced-motion: reduce) {
+    .darkroom-ready .darkroom-drying-line--visible .darkroom-drying-line__print {
+      animation: none;
+    }
+
+    .darkroom-developing .darkroom-drying-line {
+      filter: none;
+      transition: opacity 0.3s ease;
+      transition-delay: 0ms;
+    }
+  }
+
+  /* ==========================================================================
+     Exposure Test Strip
+     ========================================================================== */
+
+  .darkroom-test-strip {
+    width: 100%;
+    display: block;
+  }
+
+  .darkroom-test-strip__bands {
+    display: flex;
+    width: 100%;
+    aspect-ratio: 16 / 5;
+    border: 1px solid rgb(var(--color-foreground-rgb) / 0.2);
+    overflow: hidden;
+  }
+
+  .darkroom-test-strip__band {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    filter: brightness(var(--band-brightness, 1)) contrast(var(--band-contrast, 1)) saturate(var(--band-saturate, 1));
+    transition: filter 0.8s ease-out;
+  }
+
+  .darkroom-test-strip__image {
+    display: block;
+    width: calc(var(--bands-count, 5) * 100%);
+    height: 100%;
+    object-fit: cover;
+    margin-left: calc(-100% * var(--band-index, 0));
+  }
+
+  .darkroom-test-strip__label {
+    position: absolute;
+    bottom: var(--padding-xs);
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono--family);
+    font-weight: var(--font-mono--weight);
+    font-size: var(--font-size--3xs);
+    letter-spacing: 0.1em;
+    color: rgb(255 255 255 / 0.7);
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+    white-space: nowrap;
+  }
+
+  .darkroom-test-strip__mark {
+    position: absolute;
+    top: var(--padding-xs);
+    right: var(--padding-xs);
+  }
+
+  /* Develop on hover / focus (desktop) */
+  @media (hover: hover) and (pointer: fine) {
+    .darkroom-test-strip:hover .darkroom-test-strip__band,
+    .darkroom-test-strip:focus-within .darkroom-test-strip__band {
+      filter: brightness(1) contrast(1) saturate(1);
+    }
+  }
+
+  /* Mobile tap toggle */
+  .darkroom-test-strip--developed .darkroom-test-strip__band {
+    filter: brightness(1) contrast(1) saturate(1);
+  }
+
+  /* Reduced motion: no filter transition */
+  @media (prefers-reduced-motion: reduce) {
+    .darkroom-test-strip__band {
+      transition: none;
+    }
+  }
+
+  /* Hide old image frame if test strip is present */
+  .darkroom-test-strip + .darkroom-header__image-frame {
+    display: none;
+  }
 {% endstylesheet %}

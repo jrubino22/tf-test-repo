@@ -55,6 +55,9 @@ class DarkroomCollection extends HTMLElement {
   /** @type {string|null} */
   #activeFilmstripId = null;
 
+  /** @type {IntersectionObserver|null} */
+  #dryingLineObserver = null;
+
   connectedCallback() {
     this.#abortController = new AbortController();
     const signal = this.#abortController.signal;
@@ -83,6 +86,8 @@ class DarkroomCollection extends HTMLElement {
 
     this.classList.add('darkroom-ready');
 
+    this.#bindDryingLines(signal);
+
     // Initial develop effect
     if (this.dataset.enableAnimations !== 'false') {
       this.#playDevelop();
@@ -94,6 +99,7 @@ class DarkroomCollection extends HTMLElement {
     this.#abortController = null;
     this.#mutationObserver?.disconnect();
     this.#mutationObserver = null;
+    this.#cleanupDryingLines();
 
     if (this.#rafId) {
       cancelAnimationFrame(this.#rafId);
@@ -140,7 +146,7 @@ class DarkroomCollection extends HTMLElement {
 
   #playDevelop() {
     const items = this.#currentView === VIEW_INDEX
-      ? this.querySelectorAll('.darkroom-index__row')
+      ? this.querySelectorAll('.darkroom-index__row, .darkroom-drying-line')
       : this.querySelectorAll('.darkroom-sheet__frame');
 
     if (!items.length) return;
@@ -563,6 +569,42 @@ class DarkroomCollection extends HTMLElement {
   }
 
   // ---------------------------------------------------------------------------
+  // Drying Line IntersectionObserver
+  // ---------------------------------------------------------------------------
+
+  #bindDryingLines(signal) {
+    if (this.#reducedMotion || this.dataset.enableAnimations === 'false') return;
+
+    const lines = this.querySelectorAll('.darkroom-drying-line');
+    if (!lines.length) return;
+
+    this.#dryingLineObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('darkroom-drying-line--visible');
+            this.#dryingLineObserver?.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    for (const line of lines) {
+      if (!line.classList.contains('darkroom-drying-line--visible')) {
+        this.#dryingLineObserver.observe(line);
+      }
+    }
+  }
+
+  #cleanupDryingLines() {
+    if (this.#dryingLineObserver) {
+      this.#dryingLineObserver.disconnect();
+      this.#dryingLineObserver = null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // AJAX Re-init (MutationObserver)
   // ---------------------------------------------------------------------------
 
@@ -573,6 +615,12 @@ class DarkroomCollection extends HTMLElement {
     this.#mutationObserver = new MutationObserver(() => {
       // Re-apply current view after AJAX morph
       this.#applyView(true);
+
+      // Re-init drying lines for new products
+      this.#cleanupDryingLines();
+      if (this.#abortController) {
+        this.#bindDryingLines(this.#abortController.signal);
+      }
     });
 
     this.#mutationObserver.observe(resultsList, {
@@ -583,3 +631,35 @@ class DarkroomCollection extends HTMLElement {
 }
 
 customElements.define('darkroom-collection', DarkroomCollection);
+
+/**
+ * DarkroomTestStrip — Custom Element
+ *
+ * Handles mobile tap-to-develop toggle for the exposure test strip.
+ * On desktop (hover: hover), CSS handles the develop effect via :hover/:focus-within.
+ * On touch devices, a click toggles the .darkroom-test-strip--developed class.
+ */
+class DarkroomTestStrip extends HTMLElement {
+  /** @type {AbortController|null} */
+  #abortController = null;
+
+  connectedCallback() {
+    this.#abortController = new AbortController();
+    const signal = this.#abortController.signal;
+
+    const hasHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    if (!hasHover) {
+      this.addEventListener('click', () => {
+        this.classList.toggle('darkroom-test-strip--developed');
+      }, { signal });
+    }
+  }
+
+  disconnectedCallback() {
+    this.#abortController?.abort();
+    this.#abortController = null;
+  }
+}
+
+customElements.define('darkroom-test-strip', DarkroomTestStrip);
