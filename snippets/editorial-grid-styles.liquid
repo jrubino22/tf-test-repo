@@ -1,0 +1,433 @@
+{% doc %}
+  Editorial Collection Grid Styles
+
+  CSS styles for the editorial magazine-style collection grid layout.
+  Includes asymmetric grid, card size variants, interstitial blocks,
+  scroll-reveal animations, filter overrides, and editorial pagination.
+
+  @example
+  {% render 'editorial-grid-styles' %}
+{% enddoc %}
+
+{% stylesheet %}
+  /* ==========================================================================
+     Editorial Collection Grid
+     ========================================================================== */
+
+  .editorial-collection {
+    display: block;
+    width: 100%;
+    padding-block-start: var(--editorial-padding-block-start, 0px);
+    padding-block-end: var(--editorial-padding-block-end, 32px);
+  }
+
+  .editorial-collection__inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  /* --------------------------------------------------------------------------
+     Grid Layout
+     -------------------------------------------------------------------------- */
+
+  .editorial-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--editorial-grid-gap, 16px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: editorial-card;
+  }
+
+  @media screen and (min-width: 750px) {
+    .editorial-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .editorial-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Card Size Variants
+     -------------------------------------------------------------------------- */
+
+  .editorial-grid__item {
+    position: relative;
+    counter-increment: editorial-card;
+  }
+
+  /* Feature — 4 columns on desktop, 2 on tablet, full on mobile */
+  .editorial-grid__item--feature {
+    grid-column: span 2;
+  }
+
+  @media screen and (min-width: 990px) {
+    .editorial-grid__item--feature {
+      grid-column: span 4;
+    }
+  }
+
+  /* Standard — 2 columns on desktop, 2 on tablet, 1 on mobile */
+  .editorial-grid__item--standard {
+    grid-column: span 1;
+  }
+
+  @media screen and (min-width: 990px) {
+    .editorial-grid__item--standard {
+      grid-column: span 2;
+    }
+  }
+
+  /* Portrait — 2 columns on desktop, 1 on tablet, 1 on mobile */
+  .editorial-grid__item--portrait {
+    grid-column: span 1;
+  }
+
+  @media screen and (min-width: 990px) {
+    .editorial-grid__item--portrait {
+      grid-column: span 2;
+    }
+  }
+
+  /* Spread — full width across all breakpoints */
+  .editorial-grid__item--spread {
+    grid-column: 1 / -1;
+  }
+
+  /* --------------------------------------------------------------------------
+     Card Aspect Ratios (applied to the gallery container inside product card)
+     -------------------------------------------------------------------------- */
+
+  .editorial-grid__item--feature .card-gallery,
+  .editorial-grid__item--feature .product-media-container {
+    aspect-ratio: 3 / 4;
+  }
+
+  .editorial-grid__item--standard .card-gallery,
+  .editorial-grid__item--standard .product-media-container {
+    aspect-ratio: 1 / 1;
+  }
+
+  .editorial-grid__item--portrait .card-gallery,
+  .editorial-grid__item--portrait .product-media-container {
+    aspect-ratio: 2 / 3;
+  }
+
+  .editorial-grid__item--spread .card-gallery,
+  .editorial-grid__item--spread .product-media-container {
+    aspect-ratio: 16 / 9;
+  }
+
+  .editorial-grid__item .card-gallery img,
+  .editorial-grid__item .product-media-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* --------------------------------------------------------------------------
+     Card Index Number
+     -------------------------------------------------------------------------- */
+
+  .editorial-card__index {
+    position: absolute;
+    top: var(--padding-xs);
+    inset-inline-start: var(--padding-xs);
+    z-index: 2;
+    font-family: var(--font-subheading--family);
+    font-size: var(--font-size--3xs);
+    font-weight: var(--font-subheading--weight);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--color-foreground-rgb) / 0.5);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--animation-speed) var(--ease-out-cubic);
+  }
+
+  .editorial-card__index::before {
+    content: counter(editorial-card, decimal-leading-zero);
+  }
+
+  .editorial-grid__item--show-index .editorial-card__index {
+    opacity: 1;
+  }
+
+  /* --------------------------------------------------------------------------
+     Card Hover Effects
+     -------------------------------------------------------------------------- */
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .editorial-grid__item {
+      transition: transform var(--animation-speed-slow, 0.2s) var(--ease-out-cubic);
+    }
+
+    .editorial-grid__item:hover {
+      transform: translateY(-4px);
+    }
+
+    .editorial-grid__item:hover .editorial-card__index {
+      opacity: 1;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Interstitial Blocks
+     -------------------------------------------------------------------------- */
+
+  .editorial-grid__interstitial {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--padding-4xl);
+    padding-inline: var(--padding-xl);
+    text-align: center;
+  }
+
+  .editorial-interstitial__quote {
+    font-family: var(--font-accent--family);
+    font-style: italic;
+    font-size: clamp(1.25rem, 3vw, 2rem);
+    line-height: 1.4;
+    max-width: 48rem;
+    color: rgb(var(--color-foreground-rgb) / 0.75);
+    margin: 0;
+  }
+
+  .editorial-interstitial__image {
+    max-width: 100%;
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: var(--style-border-radius-medium, 4px);
+  }
+
+  .editorial-interstitial--with-image {
+    flex-direction: column;
+    gap: var(--gap-lg);
+  }
+
+  @media screen and (min-width: 750px) {
+    .editorial-interstitial--with-image {
+      flex-direction: row;
+      gap: var(--gap-xl);
+      text-align: start;
+    }
+
+    .editorial-interstitial__image {
+      max-width: 50%;
+      max-height: 320px;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Filter / Sort Overrides (scoped to editorial context)
+     -------------------------------------------------------------------------- */
+
+  .editorial-collection .facets__form {
+    gap: var(--gap-lg);
+  }
+
+  .editorial-collection .facets__label,
+  .editorial-collection .facets__sort-label {
+    font-family: var(--font-subheading--family);
+    font-variant: small-caps;
+    letter-spacing: 0.08em;
+    font-size: var(--font-size--xs);
+    text-transform: lowercase;
+  }
+
+  .editorial-collection .facets__pill-label--active {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+
+  .editorial-collection .facets__clear-all-link {
+    font-family: var(--font-subheading--family);
+    font-size: var(--font-size--3xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* --------------------------------------------------------------------------
+     Editorial Pagination
+     -------------------------------------------------------------------------- */
+
+  .editorial-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-xl);
+    padding-block: var(--padding-3xl);
+    font-family: var(--font-heading--family);
+  }
+
+  .editorial-pagination__indicator {
+    font-size: var(--font-size--sm);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgb(var(--color-foreground-rgb) / 0.6);
+  }
+
+  .editorial-pagination__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    font-family: var(--font-subheading--family);
+    font-size: var(--font-size--xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: rgb(var(--color-foreground-rgb));
+    padding: var(--padding-xs) var(--padding-md);
+    border-bottom: 1px solid rgb(var(--color-foreground-rgb) / 0.3);
+    transition: border-color var(--animation-speed) var(--ease-out-cubic);
+  }
+
+  .editorial-pagination__link:hover {
+    border-color: rgb(var(--color-foreground-rgb));
+  }
+
+  .editorial-pagination__link:focus-visible {
+    outline: 2px solid rgb(var(--color-foreground-rgb));
+    outline-offset: 2px;
+  }
+
+  .editorial-pagination__link--disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    border-color: transparent;
+  }
+
+  /* --------------------------------------------------------------------------
+     Empty State
+     -------------------------------------------------------------------------- */
+
+  .editorial-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-block: var(--padding-6xl);
+    padding-inline: var(--page-margin);
+    gap: var(--gap-md);
+  }
+
+  .editorial-empty__heading {
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 1.1;
+    margin: 0;
+  }
+
+  .editorial-empty__text {
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--sm);
+    color: rgb(var(--color-foreground-rgb) / 0.7);
+    max-width: 28rem;
+    margin: 0;
+  }
+
+  .editorial-empty__link {
+    font-family: var(--font-subheading--family);
+    font-size: var(--font-size--xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    color: rgb(var(--color-foreground-rgb));
+  }
+
+  .editorial-empty__link:focus-visible {
+    outline: 2px solid rgb(var(--color-foreground-rgb));
+    outline-offset: 2px;
+  }
+
+  /* --------------------------------------------------------------------------
+     Scroll Reveal Animations
+     -------------------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .editorial-reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition:
+        opacity 0.5s var(--ease-out-cubic),
+        transform 0.5s var(--ease-out-cubic);
+      transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    .editorial-reveal--visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* When reduced motion is preferred, elements are always visible */
+  @media (prefers-reduced-motion: reduce) {
+    .editorial-reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Responsive — Mobile (max 749px)
+     -------------------------------------------------------------------------- */
+
+  @media screen and (max-width: 749px) {
+    .editorial-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--editorial-grid-gap-mobile, 8px);
+    }
+
+    .editorial-grid__item--feature {
+      grid-column: 1 / -1;
+    }
+
+    .editorial-grid__item--standard {
+      grid-column: span 1;
+    }
+
+    .editorial-grid__item--portrait {
+      grid-column: span 1;
+    }
+
+    .editorial-grid__item--spread {
+      grid-column: 1 / -1;
+    }
+
+    .editorial-grid__interstitial {
+      padding-block: var(--padding-2xl);
+      padding-inline: var(--padding-md);
+    }
+
+    .editorial-interstitial__quote {
+      font-size: 1.125rem;
+    }
+
+    .editorial-pagination {
+      gap: var(--gap-md);
+      padding-block: var(--padding-xl);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Infinite Scroll Trigger
+     -------------------------------------------------------------------------- */
+
+  .editorial-collection__view-more {
+    display: block;
+    min-height: 1px;
+  }
+{% endstylesheet %}
